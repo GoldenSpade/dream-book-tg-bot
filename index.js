@@ -1,33 +1,68 @@
 import { Telegraf, Markup } from 'telegraf'
-import data from './data/data.js'
 import 'dotenv/config.js'
+
+import { data } from './data/data.js'
+import { splitText } from './helpers/splitText.js'
+import { searchItems } from './helpers/searchItems.js'
 
 const bot = new Telegraf(process.env.API_KEY)
 
 const searchResults = new Map()
 
-// Функция для разбиения текста на части по максимальной длине
-const splitText = (text, maxLength) => {
-  const parts = []
-  while (text.length > maxLength) {
-    let part = text.substring(0, maxLength)
-    const lastSpace = part.lastIndexOf('\n')
-    if (lastSpace !== -1) {
-      part = part.substring(0, lastSpace)
-    }
-    parts.push(part)
-    text = text.substring(part.length)
-  }
-  parts.push(text)
-  return parts
-}
+// Главное меню
+const mainMenu = Markup.keyboard([
+  ['🔍 Поиск по слову', 'ℹ️ О боте', '❓ Помощь'],
+  ['☕ Купить нам кофе']
+]).resize()
 
-bot.start(ctx => ctx.reply('Привет! Введите слово для поиска трактования сна.'))
+bot.start(ctx => {
+  ctx.reply(
+    'Привет! Введите слово для поиска трактования сна или выберите опцию из меню.',
+    mainMenu
+  )
+})
+
+// Обработка команды "Поиск по слову"
+bot.hears('🔍 Поиск по слову', ctx => {
+  ctx.reply('Введите слово для поиска трактования сна:')
+})
+
+// Обработка команды "О боте"
+bot.hears('ℹ️ О боте', ctx => {
+  ctx.reply(
+    'Этот бот позволяет искать трактования снов. Введите слово для поиска, и бот покажет вам соответствующие трактования.'
+  )
+})
+
+// Обработка команды "Помощь"
+bot.hears('❓ Помощь', ctx => {
+  ctx.reply(
+    'Для поиска трактования сна введите слово длиной более 3-х символов. Используйте букву "е" вместо "ё". Вы можете также попробовать написать слово во множественном числе.'
+  )
+})
+
+// Обработка команды "Купить нам кофе"
+bot.hears('☕ Купить нам кофе', ctx => {
+  ctx.replyWithHTML(
+    'Вы можете поддержать нас, купив нам кофе <a href="https://google.com">здесь</a>.'
+  )
+})
 
 bot.on('text', async ctx => {
   const target = ctx.message.text
+  // Проверка на команду
+  if (
+    [
+      '🔍 Поиск по слову',
+      'ℹ️ О боте',
+      '❓ Помощь',
+      '☕ Купить нам кофе'
+    ].includes(target)
+  )
+    return
+
   if (target.length >= 3) {
-    const dreams = searchItems(target)
+    const dreams = searchItems(data, target)
     if (Array.isArray(dreams) && dreams.length > 0) {
       const buttons = dreams.map((el, index) =>
         Markup.button.callback(
@@ -37,7 +72,13 @@ bot.on('text', async ctx => {
       )
       await ctx.reply(
         `Найдено вариантов ${dreams.length}:`,
-        Markup.inlineKeyboard(buttons, { columns: 2 })
+        Markup.inlineKeyboard(
+          [
+            ...buttons,
+            Markup.button.callback('🔙 Вернуться в меню', 'back_to_menu')
+          ],
+          { columns: 2 }
+        )
       )
       searchResults.set(ctx.message.message_id, dreams)
       console.log(
@@ -45,18 +86,20 @@ bot.on('text', async ctx => {
       )
     } else {
       ctx.reply(
-        'Слово не найдено. Попробуйте описать другим словом. Вместо буквы "ё" используйте букву "е". Можете прпоробовать написать во множественном числе.'
+        `Слово не найдено. Попробуйте описать другим словом. Вместо буквы "ё" используйте букву "е". Можете попробовать написать во множественном числе.`,
+        mainMenu
       )
-      console.log('Слово не найдено. Попробуйте описать другим словом.')
+      console.log(
+        `userName: ${ctx.message.from.username}, word: ${target}. Слово не найдено. Попробуйте описать другим словом.`
+      )
     }
   } else {
-    ctx.reply('Слово должно быть больше 3-х символов.')
+    ctx.reply(`Слово должно быть больше 3-х символов.`, mainMenu)
+    console.log(
+      `userName: ${ctx.message.from.username}, word: ${target}. Слово должно быть больше 3-х символов.`
+    )
   }
 })
-
-const searchItems = target => {
-  return data.filter(el => el.word.toLowerCase().includes(target.toLowerCase()))
-}
 
 bot.action(/dream_(\d+)_(\d+)/, async ctx => {
   const messageId = parseInt(ctx.match[1])
@@ -69,7 +112,13 @@ bot.action(/dream_(\d+)_(\d+)/, async ctx => {
       await ctx.reply(part)
     }
   }
-  await ctx.answerCbQuery() // Acknowledge the callback query
+  await ctx.answerCbQuery() // Подтвердите запроса обратного вызова
+})
+
+// Обработка команды "Вернуться в меню"
+bot.action('back_to_menu', ctx => {
+  ctx.reply('Вы вернулись в главное меню.', mainMenu)
+  ctx.answerCbQuery() // Подтвердите запроса обратного вызова
 })
 
 bot.launch().then(() => console.log('Started'))
