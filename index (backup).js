@@ -28,7 +28,7 @@ bot.hears('🔍 Поиск по слову', ctx => {
   console.log(ctx);
   console.log('From:', ctx.update.message.from);
   console.log('Chat:', ctx.update.message.chat);
-  console.log('agent:', ctx.telegram.options.ag);
+  console.log('agent:', ctx.telegram.options.agent);
   
   
   // ctx.reply()

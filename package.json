@@ -18,6 +18,7 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "nodemon": "^3.1.4",
+    "suncalc": "^1.9.0",
     "telegraf": "^4.16.3"
   },
   "engines": {
