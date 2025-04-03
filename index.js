@@ -2,28 +2,20 @@ import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
 import { User, initDB } from './data/db.js'
 import { data } from './data/data.js'
-import { splitText } from './helpers/splitText.js'
-import { searchItems } from './helpers/searchItems.js'
+import { commandHandlers } from './handlers/commandHandlers.js'
+import { mainMenu } from './helpers/keyboards.js'
 import { dateFromTimeStamp } from './helpers/dateFromTimeStamp.js'
-import { getLunarDay } from './helpers/lunarDay.js'
-import { getGregorianDay } from './helpers/gregorianDay.js'
+import { searchItems } from './helpers/searchItems.js'
+import { splitText } from './helpers/splitText.js'
 
 const bot = new Telegraf(process.env.API_KEY)
 const CACHE_TTL = 60 * 60 * 1000
 const searchResults = new Map()
-const sentMessages = new Map() // Хранилище ID отправленных сообщений
+const sentMessages = new Map()
 
-// Инициализация БД при запуске
 await initDB()
 
-// --- Клавиатуры ---
-const mainMenu = Markup.keyboard([
-  ['🔍 Поиск по слову', 'ℹ️ О боте'],
-  ['🌙 Лунные сны', '📅 Календарные сны'],
-  ['❓ Помощь'],
-]).resize()
-
-// --- Команды ---
+// Start command остается без изменений
 bot.start(async (ctx) => {
   try {
     const { id, first_name, username } = ctx.from // Получаем данные пользователя из ctx.from
@@ -65,67 +57,9 @@ bot.start(async (ctx) => {
   }
 })
 
-const commandHandlers = {
-  '🔍 Поиск по слову': (ctx) => ctx.reply('Введите слово для поиска:'),
-  'ℹ️ О боте': (ctx) =>
-    ctx.reply(
-      '🔮 Сонник с глубоким анализом. Напишите, что вам приснилось — и я расшифрую скрытые смыслы!'
-    ),
-  '❓ Помощь': (ctx) =>
-    ctx.reply(
-      'Для поиска трактования сна введите слово длиной >3 символов. Используйте "е" вместо "ё".'
-    ),
-  '🌙 Лунные сны': async (ctx) => {
-    try {
-      const moonInfo = getLunarDay() // Эта функция уже возвращает готовый текст с "Сегодня X-й лунный день..."
-      const shareText = `${moonInfo}\n✨ Больше толкований: https://t.me/${ctx.botInfo.username}`
-
-      await ctx.reply(moonInfo) // Отправляем только текст с лунным днем
-      await ctx.reply(
-        `🔗 Поделитесь этим толкованием:`,
-        Markup.inlineKeyboard([
-          [
-            Markup.button.url(
-              '📤 Поделиться',
-              `https://t.me/share/url?url=${encodeURIComponent(
-                '🌙 Лунный день'
-              )}&text=${encodeURIComponent(shareText)}`
-            ),
-          ],
-          [Markup.button.callback('🔙 В меню', 'back_to_menu')],
-        ])
-      )
-    } catch (error) {
-      console.error('Ошибка:', error)
-      ctx.reply('Произошла ошибка.')
-    }
-  },
-  '📅 Календарные сны': async (ctx) => {
-    try {
-      const gregorianInfo = getGregorianDay() // Функция возвращает "Сегодня X-е число..."
-      const shareText = `${gregorianInfo}\n✨ Больше толкований: https://t.me/${ctx.botInfo.username}`
-
-      await ctx.reply(gregorianInfo) // Только текст с числом
-      await ctx.reply(
-        `🔗 Поделитесь этим толкованием:`,
-        Markup.inlineKeyboard([
-          [
-            Markup.button.url(
-              '📤 Поделиться',
-              `https://t.me/share/url?url=${encodeURIComponent(
-                '📅 Календарный сон'
-              )}&text=${encodeURIComponent(shareText)}`
-            ),
-          ],
-          [Markup.button.callback('🔙 В меню', 'back_to_menu')],
-        ])
-      )
-    } catch (error) {
-      console.error('Ошибка:', error)
-      ctx.reply('Произошла ошибка.')
-    }
-  },
-}
+Object.entries(commandHandlers).forEach(([command, handler]) => {
+  bot.hears(command, handler)
+})
 
 // Регистрируем все исходящие сообщения бота
 bot.use(async (ctx, next) => {
@@ -136,10 +70,6 @@ bot.use(async (ctx, next) => {
     }
     sentMessages.get(ctx.chat.id).push(ctx.message.message_id)
   }
-})
-
-Object.entries(commandHandlers).forEach(([command, handler]) => {
-  bot.hears(command, handler)
 })
 
 // --- Поиск по тексту ---
