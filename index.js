@@ -77,18 +77,18 @@ const commandHandlers = {
     ),
   '🌙 Лунные сны': async (ctx) => {
     try {
-      const moonInfo = getLunarDay()
-      const shareText = `🌙 Лунный сонник:\n\n${moonInfo}\n\n✨ Больше толкований в Телеграм боте Шепот Морфея: https://t.me/${ctx.botInfo.username}`
+      const moonInfo = getLunarDay() // Эта функция уже возвращает готовый текст с "Сегодня X-й лунный день..."
+      const shareText = `${moonInfo}\n✨ Больше толкований: https://t.me/${ctx.botInfo.username}`
 
-      await ctx.reply(moonInfo)
+      await ctx.reply(moonInfo) // Отправляем только текст с лунным днем
       await ctx.reply(
-        `🔗 Поделитесь толкованием лунных снов:`,
+        `🔗 Поделитесь этим толкованием:`,
         Markup.inlineKeyboard([
           [
             Markup.button.url(
-              '📤 Поделиться с друзьями',
+              '📤 Поделиться',
               `https://t.me/share/url?url=${encodeURIComponent(
-                `Толкование лунных снов`
+                '🌙 Лунный день'
               )}&text=${encodeURIComponent(shareText)}`
             ),
           ],
@@ -96,24 +96,24 @@ const commandHandlers = {
         ])
       )
     } catch (error) {
-      console.error('Ошибка при обработке лунных снов:', error)
-      ctx.reply('Произошла ошибка при получении информации о лунных снах.')
+      console.error('Ошибка:', error)
+      ctx.reply('Произошла ошибка.')
     }
   },
   '📅 Календарные сны': async (ctx) => {
     try {
-      const gregorianInfo = getGregorianDay()
-      const shareText = `📅 Календарный сонник:\n\n${gregorianInfo}\n\n✨ Больше толкований в Телеграм боте Шепот Морфея: https://t.me/${ctx.botInfo.username}`
+      const gregorianInfo = getGregorianDay() // Функция возвращает "Сегодня X-е число..."
+      const shareText = `${gregorianInfo}\n✨ Больше толкований: https://t.me/${ctx.botInfo.username}`
 
-      await ctx.reply(gregorianInfo)
+      await ctx.reply(gregorianInfo) // Только текст с числом
       await ctx.reply(
-        `🔗 Поделитесь толкованием календарных снов:`,
+        `🔗 Поделитесь этим толкованием:`,
         Markup.inlineKeyboard([
           [
             Markup.button.url(
-              '📤 Поделиться с друзьями',
+              '📤 Поделиться',
               `https://t.me/share/url?url=${encodeURIComponent(
-                `Толкование календарных снов`
+                '📅 Календарный сон'
               )}&text=${encodeURIComponent(shareText)}`
             ),
           ],
@@ -121,8 +121,8 @@ const commandHandlers = {
         ])
       )
     } catch (error) {
-      console.error('Ошибка при обработке календарных снов:', error)
-      ctx.reply('Произошла ошибка при получении информации о календарных снах.')
+      console.error('Ошибка:', error)
+      ctx.reply('Произошла ошибка.')
     }
   },
 }
