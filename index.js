@@ -76,6 +76,12 @@ bot.use(async (ctx, next) => {
 bot.on('text', async (ctx) => {
   const { text: target, from, message_id } = ctx.message
 
+  console.log(
+    `first_name: ${from.first_name}, username: ${
+      from.username
+    }, word: ${target}, date: ${dateFromTimeStamp(ctx.message.date)}`
+  )
+
   if (commandHandlers[target]) return
 
   if (target.length < 3) {
@@ -114,14 +120,6 @@ bot.on('text', async (ctx) => {
       sentMessages.set(ctx.chat.id, [])
     }
     sentMessages.get(ctx.chat.id).push(searchResultMessage.message_id)
-
-    console.log(
-      `first_name: ${from.first_name}, username: ${
-        from.username
-      }, word: ${target}, amount: ${dreams.length}, date: ${dateFromTimeStamp(
-        ctx.message.date
-      )}`
-    )
   } catch (error) {
     console.error('Ошибка поиска:', error)
   }
