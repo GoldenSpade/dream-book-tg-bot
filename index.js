@@ -8,7 +8,7 @@ import { dateFromTimeStamp } from './helpers/dateFromTimeStamp.js'
 import { searchItems } from './helpers/searchItems.js'
 import { splitText } from './helpers/splitText.js'
 
-const bot = new Telegraf(process.env.API_KEY)
+const bot = new Telegraf(process.env.BOT_API_KEY)
 const CACHE_TTL = 60 * 60 * 1000
 const searchResults = new Map()
 const sentMessages = new Map()
