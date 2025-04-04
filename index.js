@@ -18,17 +18,16 @@ await initDB()
 // Start command остается без изменений
 bot.start(async (ctx) => {
   try {
-    const { id, first_name, username } = ctx.from // Получаем данные пользователя из ctx.from
+    const { id, first_name, username } = ctx.from
 
-    // Проверяем существование пользователя и добавляем при необходимости
+    // Новый формат вызова
     const [user, created] = await User.findOrCreate({
-      where: { userId: id },
-      defaults: {
-        firstName: first_name,
-        username: username || null,
-      },
+      userId: id,
+      firstName: first_name,
+      username: username || null,
     })
 
+    // Остальной код остается без изменений
     if (created) {
       console.log(
         `✅ Новый пользователь: ${first_name}, ID: ${id}, Date: ${dateFromTimeStamp(
@@ -41,8 +40,7 @@ bot.start(async (ctx) => {
           ctx.message.date
         )}`
       )
-      // Обновляем дату последней активности
-      await user.update({ lastActivity: new Date() })
+      await User.update(id, { lastActivity: new Date().toISOString() })
     }
 
     ctx.reply(
@@ -50,7 +48,7 @@ bot.start(async (ctx) => {
       mainMenu
     )
   } catch (err) {
-    console.error('Ошибка при обработке /start:', err) // Используем console.error для ошибок
+    console.error('Ошибка при обработке /start:', err)
     ctx.reply(
       'Произошла ошибка при запуске бота. Пожалуйста, попробуйте позже.'
     )
@@ -185,8 +183,13 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
 
 // --- Возврат в меню ---
 bot.action('back_to_menu', async (ctx) => {
-  await ctx.deleteMessage()
-  ctx.reply('Вы вернулись в меню.', mainMenu)
+  try {
+    // Удаляем только сообщение с результатом гадания
+    await ctx.deleteMessage()
+    await ctx.reply('Вы вернулись в меню.', mainMenu)
+  } catch (error) {
+    console.error('Ошибка при возврате в меню:', error)
+  }
 })
 
 // --- Запуск ---

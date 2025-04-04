@@ -1,16 +1,15 @@
 import { Markup } from 'telegraf'
 
 const mainMenu = Markup.keyboard([
-  ['🔍 Поиск по слову', 'ℹ️ О боте'],
-  ['🌙 Лунные сны', '📅 Календарные сны'],
-  ['❓ Помощь'],
+  ['🔍 Поиск по слову', 'ℹ️ О боте', '❓ Помощь'],
+  ['🌙 Лунные сны', '📅 Календарные сны', '🔮 Гадание Да/Нет'],
 ]).resize()
 
-const getShareKeyboard = (shareText, title, isDream = false) => {
+const shareKeyboard = (shareText, title, isFortune = false) => {
   return Markup.inlineKeyboard([
     [
       Markup.button.url(
-        '📤 Поделиться' + (isDream ? ' сном' : ''),
+        isFortune ? '🕯️ Поделиться гаданием с друзьями' : '📤 Поделиться сном',
         `https://t.me/share/url?url=${encodeURIComponent(
           title
         )}&text=${encodeURIComponent(shareText)}`
@@ -20,4 +19,4 @@ const getShareKeyboard = (shareText, title, isDream = false) => {
   ])
 }
 
-export { mainMenu, getShareKeyboard }
+export { mainMenu, shareKeyboard }
