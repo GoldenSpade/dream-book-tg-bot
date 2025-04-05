@@ -1,6 +1,6 @@
 import { getLunarDay } from '../helpers/lunarDay.js'
 import { getGregorianDay } from '../helpers/gregorianDay.js'
-import { getRandomFortuneGif } from '../fortune_tellings/yesNo.js'
+import { getRandomFortune } from '../fortune_tellings/yes_no/yesNo.js'
 import { shareKeyboard } from '../helpers/keyboards.js'
 import { Markup } from 'telegraf'
 
@@ -51,13 +51,13 @@ export const commandHandlers = {
 
   '🔮 Гадание Да/Нет': async (ctx) => {
     try {
-      const gifBuffer = await getRandomFortuneGif()
+      const gifBuffer = await getRandomFortune()
       const shareText = `🕯️ Я погадал(а) в боте "Шепот Морфея"!\n\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
 
-      await ctx.replyWithAnimation(
+      await ctx.replyWithVideo(
         { source: gifBuffer },
         {
-          caption: '🔮 Оракул ищет ответ...',
+          caption: '🔮 Ваш ответ...',
           reply_markup: {
             inline_keyboard: [
               [
