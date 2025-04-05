@@ -10,7 +10,7 @@ const jpgFiles = [
   '50x50.mp4',
 ]
 
-export async function getRandomFortune() {
+async function getRandomFortune() {
   const randomjpg = jpgFiles[Math.floor(Math.random() * jpgFiles.length)]
   const imagePath = path.join(
     process.cwd(),
@@ -21,3 +21,16 @@ export async function getRandomFortune() {
   )
   return await fs.readFile(imagePath)
 }
+
+async function getMagicBallImage() {
+  const imagePath = path.join(
+    process.cwd(),
+    'fortune_tellings',
+    'yes_no',
+    'img',
+    'magic_ball.jpg'
+  )
+  return await fs.readFile(imagePath)
+}
+
+export { getRandomFortune, getMagicBallImage }

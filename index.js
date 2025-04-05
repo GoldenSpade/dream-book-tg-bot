@@ -7,6 +7,7 @@ import { mainMenu } from './helpers/keyboards.js'
 import { dateFromTimeStamp } from './helpers/dateFromTimeStamp.js'
 import { searchItems } from './helpers/searchItems.js'
 import { splitText } from './helpers/splitText.js'
+import { getRandomFortune } from './fortune_tellings/yes_no/yesNo.js'
 
 const bot = new Telegraf(process.env.BOT_API_KEY)
 const CACHE_TTL = 60 * 60 * 1000
@@ -189,6 +190,42 @@ bot.action('back_to_menu', async (ctx) => {
     await ctx.reply('Вы вернулись в меню.', mainMenu)
   } catch (error) {
     console.error('Ошибка при возврате в меню:', error)
+  }
+})
+
+// Обработка начала гадания
+bot.action('start_fortune', async (ctx) => {
+  try {
+    // Удаляем предыдущее сообщение с инструкцией
+    await ctx.deleteMessage()
+
+    // Получаем случайное гадание
+    const gifBuffer = await getRandomFortune()
+    const shareText = `🕯️ Я погадал(а) в боте "Шепот Морфея"!\n\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+
+    // Отправляем результат гадания
+    await ctx.replyWithVideo(
+      { source: gifBuffer },
+      {
+        caption: '🔮 Ваш ответ...',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              Markup.button.url(
+                '🕯️ Поделиться гаданием',
+                `https://t.me/share/url?url=${encodeURIComponent(
+                  ' '
+                )}&text=${encodeURIComponent(shareText)}`
+              ),
+            ],
+            [Markup.button.callback('🔙 В меню', 'back_to_menu')],
+          ],
+        },
+      }
+    )
+  } catch (error) {
+    console.error('Ошибка при гадании:', error)
+    await ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
   }
 })
 

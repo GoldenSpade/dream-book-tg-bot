@@ -1,8 +1,11 @@
 import { getLunarDay } from '../helpers/lunarDay.js'
 import { getGregorianDay } from '../helpers/gregorianDay.js'
-import { getRandomFortune } from '../fortune_tellings/yes_no/yesNo.js'
 import { shareKeyboard } from '../helpers/keyboards.js'
-import { Markup } from 'telegraf'
+import { startFortuneKeyboard } from '../helpers/keyboards.js'
+import {
+  getRandomFortune,
+  getMagicBallImage,
+} from '../fortune_tellings/yes_no/yesNo.js'
 
 export const commandHandlers = {
   '🔍 Поиск по слову': (ctx) => ctx.reply('Введите слово для поиска:'),
@@ -51,30 +54,17 @@ export const commandHandlers = {
 
   '🔮 Гадание Да/Нет': async (ctx) => {
     try {
-      const gifBuffer = await getRandomFortune()
-      const shareText = `🕯️ Я погадал(а) в боте "Шепот Морфея"!\n\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+      const magicBallImage = await getMagicBallImage()
 
-      await ctx.replyWithVideo(
-        { source: gifBuffer },
+      await ctx.replyWithPhoto(
+        { source: magicBallImage },
         {
-          caption: '🔮 Ваш ответ...',
-          reply_markup: {
-            inline_keyboard: [
-              [
-                Markup.button.url(
-                  '🕯️ Поделиться гаданием',
-                  `https://t.me/share/url?url=${encodeURIComponent(
-                    ' '
-                  )}&text=${encodeURIComponent(shareText)}`
-                ),
-              ],
-              [Markup.button.callback('🔙 В меню', 'back_to_menu')],
-            ],
-          },
+          caption: '🔮 Задумайте ваш вопрос и нажмите на кнопку "Начать"',
+          reply_markup: startFortuneKeyboard.reply_markup,
         }
       )
     } catch (error) {
-      console.error('Ошибка при гадании:', error)
+      console.error('Ошибка при запуске гадания:', error)
       ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.')
     }
   },

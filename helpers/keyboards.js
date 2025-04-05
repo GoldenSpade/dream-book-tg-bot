@@ -6,6 +6,11 @@ const mainMenu = Markup.keyboard([
   ['🔮 Гадание Да/Нет', '❓ Помощь'],
 ]).resize()
 
+const startFortuneKeyboard = Markup.inlineKeyboard([
+  [Markup.button.callback('✨ Начать', 'start_fortune')],
+  [Markup.button.callback('🔙 В меню', 'back_to_menu')],
+])
+
 const shareKeyboard = (shareText, title, isFortune = false) => {
   return Markup.inlineKeyboard([
     [
@@ -20,4 +25,4 @@ const shareKeyboard = (shareText, title, isFortune = false) => {
   ])
 }
 
-export { mainMenu, shareKeyboard }
+export { mainMenu, startFortuneKeyboard, shareKeyboard }
