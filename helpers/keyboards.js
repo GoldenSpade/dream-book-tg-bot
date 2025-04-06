@@ -1,28 +1,28 @@
 import { Markup } from 'telegraf'
 
+// Главное меню (3 кнопки)
 const mainMenu = Markup.keyboard([
-  ['🔍 Поиск по слову', '🌙 Лунные сны'],
-  ['🔮 Гадание Да/Нет', '📅 Календарные сны'],
+  ['📖 Сонник', '🔮 Гадания'],
   ['📋 Инструкция'],
 ]).resize()
 
-const startFortuneKeyboard = Markup.inlineKeyboard([
-  [Markup.button.callback('✨ Начать', 'start_fortune')],
-  [Markup.button.callback('🔙 В меню', 'back_to_menu')],
+// Меню сонника
+const dreamBookMenu = Markup.keyboard([
+  ['🔍 Поиск по слову'],
+  ['🌙 Лунные сны', '📅 Календарные сны'],
+  ['↩️ Назад'],
+]).resize()
+
+// Меню гаданий
+// Меню гаданий
+const fortuneMenu = Markup.keyboard([
+  ['✨ Гадание Да/Нет', '🎧 Морфей говорит'],
+  ['↩️ Назад'],
+]).resize()
+
+// Клавиатура для возврата
+const backKeyboard = Markup.inlineKeyboard([
+  [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
 ])
 
-const shareKeyboard = (shareText, title, isFortune = false) => {
-  return Markup.inlineKeyboard([
-    [
-      Markup.button.url(
-        isFortune ? '🕯️ Поделиться гаданием с друзьями' : '📤 Поделиться сном',
-        `https://t.me/share/url?url=${encodeURIComponent(
-          title
-        )}&text=${encodeURIComponent(shareText)}`
-      ),
-    ],
-    [Markup.button.callback('🔙 В меню', 'back_to_menu')],
-  ])
-}
-
-export { mainMenu, startFortuneKeyboard, shareKeyboard }
+export { mainMenu, dreamBookMenu, fortuneMenu, backKeyboard }

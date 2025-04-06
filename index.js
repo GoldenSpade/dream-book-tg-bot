@@ -8,6 +8,10 @@ import { dateFromTimeStamp } from './helpers/dateFromTimeStamp.js'
 import { searchItems } from './helpers/searchItems.js'
 import { splitText } from './helpers/splitText.js'
 import { getRandomFortune } from './fortune_tellings/yes_no/yesNo.js'
+import {
+  getRandomMorpheusAudio,
+  getMorpheusImage,
+} from './fortune_tellings/morpheus_says/morpheusSays.js'
 
 const bot = new Telegraf(process.env.BOT_API_KEY)
 const CACHE_TTL = 60 * 60 * 1000
@@ -109,7 +113,7 @@ bot.on('text', async (ctx) => {
     const searchResultMessage = await ctx.reply(
       `🔍 Найдено: ${dreams.length} вариантов`,
       Markup.inlineKeyboard(
-        [...buttons, Markup.button.callback('🔙 Назад', 'back_to_menu')],
+        [...buttons, Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
         { columns: 2 }
       )
     )
@@ -169,7 +173,7 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
           )}&text=${encodeURIComponent(shareText)}`
         ),
       ],
-      [Markup.button.callback('🔙 В меню', 'back_to_menu')],
+      [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
     ])
   )
 
@@ -185,11 +189,11 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
 // --- Возврат в меню ---
 bot.action('back_to_menu', async (ctx) => {
   try {
-    // Удаляем только сообщение с результатом гадания
     await ctx.deleteMessage()
-    await ctx.reply('Вы вернулись в меню.', mainMenu)
+    await ctx.reply('Главное меню:', mainMenu)
   } catch (error) {
-    console.error('Ошибка при возврате в меню:', error)
+    console.error('Ошибка возврата:', error)
+    await ctx.reply('Главное меню:', mainMenu)
   }
 })
 
@@ -218,7 +222,7 @@ bot.action('start_fortune', async (ctx) => {
                 )}&text=${encodeURIComponent(shareText)}`
               ),
             ],
-            [Markup.button.callback('🔙 В меню', 'back_to_menu')],
+            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
           ],
         },
       }
@@ -226,6 +230,78 @@ bot.action('start_fortune', async (ctx) => {
   } catch (error) {
     console.error('Ошибка при гадании:', error)
     await ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
+  }
+})
+
+// Гадание Морфеей говорит
+bot.action('start_morpheus', async (ctx) => {
+  try {
+    await ctx.deleteMessage()
+
+    // Получаем только изображение (аудио будем получать при нажатии кнопки)
+    const { path: imagePath, filename: imageFilename } =
+      await getMorpheusImage()
+
+    // Отправляем изображение с кнопкой
+    await ctx.replyWithPhoto(
+      { source: imagePath, filename: imageFilename },
+      {
+        caption: '🌌 Морфей приготовил для вас послание...',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              Markup.button.callback(
+                '🎧 Слушать послание',
+                'play_morpheus_audio'
+              ),
+            ],
+          ],
+        },
+      }
+    )
+  } catch (error) {
+    console.error('Ошибка в Морфей говорит:', error)
+    await ctx.reply(
+      '⚠️ Не удалось загрузить сообщение Морфея. Пожалуйста, попробуйте позже.',
+      mainMenu
+    )
+  }
+})
+
+// Обработчик для кнопки "Слушать послание"
+bot.action('play_morpheus_audio', async (ctx) => {
+  try {
+    await ctx.deleteMessage() // Удаляем сообщение с кнопкой
+
+    // Получаем СЛУЧАЙНОЕ аудио каждый раз при нажатии
+    const { path: audioPath, filename: audioFilename } =
+      await getRandomMorpheusAudio()
+    const shareText = `🌌 Я услышал(а) голос Морфея в боте "Шепот Морфея"!\n\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+
+    // Отправляем аудио
+    await ctx.replyWithAudio(
+      { source: audioPath, filename: audioFilename },
+      {
+        caption: '🌌 Морфей говорит...',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              Markup.button.url(
+                '📤 Поделиться',
+                `https://t.me/share/url?url=${encodeURIComponent(
+                  'Голос Морфея'
+                )}&text=${encodeURIComponent(shareText)}`
+              ),
+            ],
+            [Markup.button.callback('🔄 Новое послание', 'start_morpheus')],
+            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+          ],
+        },
+      }
+    )
+  } catch (error) {
+    console.error('Ошибка при воспроизведении аудио:', error)
+    await ctx.reply('⚠️ Не удалось воспроизвести сообщение Морфея.', mainMenu)
   }
 })
 
