@@ -157,7 +157,7 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   const shareText = `${dream.description.substring(
     0,
     100
-  )}...\n\n✨ Больше толкований в Телеграм боте Шепот Морфея: https://t.me/${
+  )}...\n\n✨ Больше толкований в Телеграм боте Морфей: https://t.me/${
     ctx.botInfo.username
   }`
 
@@ -205,7 +205,7 @@ bot.action('start_fortune', async (ctx) => {
 
     // Получаем случайное гадание
     const gifBuffer = await getRandomFortune()
-    const shareText = `🕯️ Я погадал(а) в боте "Шепот Морфея"!\n\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+    const shareText = `🕯️ Я погадал(а) в боте "Морфей"!\n\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
 
     // Отправляем результат гадания
     await ctx.replyWithVideo(
@@ -246,7 +246,7 @@ bot.action('start_morpheus', async (ctx) => {
     await ctx.replyWithPhoto(
       { source: imagePath, filename: imageFilename },
       {
-        caption: '🌌 Морфей приготовил для вас послание...',
+        caption: '🕯 Морфей приготовил для вас послание...',
         reply_markup: {
           inline_keyboard: [
             [
@@ -276,13 +276,13 @@ bot.action('play_morpheus_audio', async (ctx) => {
     // Получаем СЛУЧАЙНОЕ аудио каждый раз при нажатии
     const { path: audioPath, filename: audioFilename } =
       await getRandomMorpheusAudio()
-    const shareText = `🌌 Я услышал(а) голос Морфея в боте "Шепот Морфея"!\n\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+    const shareText = `🌌 Я услышал(а) голос Морфея в боте "Морфей"!\n\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
 
     // Отправляем аудио
     await ctx.replyWithAudio(
       { source: audioPath, filename: audioFilename },
       {
-        caption: '🌌 Морфей говорит...',
+        caption: '🕯 Морфей говорит...',
         reply_markup: {
           inline_keyboard: [
             [
