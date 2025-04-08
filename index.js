@@ -1,6 +1,6 @@
 import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
-import { User, initDB } from './data/db.js'
+import { User, Activity, initDB } from './data/db.js'
 import { data } from './data/data.js'
 import { commandHandlers } from './handlers/commandHandlers.js'
 import { mainMenu } from './helpers/keyboards.js'
@@ -22,6 +22,7 @@ await initDB()
 
 // Start command остается без изменений
 bot.start(async (ctx) => {
+  console.log(`${ctx.message.from.id}`)
   try {
     const { id, first_name, username } = ctx.from
 
@@ -95,6 +96,9 @@ bot.on('text', async (ctx) => {
   try {
     const dreams = searchItems(data, target)
 
+    // Записываем поисковый запрос
+    Activity.logSearchQuery(ctx.from.id, target)
+
     if (!dreams.length) {
       ctx.reply('😕 Ничего не найдено. Попробуйте другое слово.', mainMenu)
       return
@@ -113,7 +117,10 @@ bot.on('text', async (ctx) => {
     const searchResultMessage = await ctx.reply(
       `🔍 Найдено: ${dreams.length} вариантов`,
       Markup.inlineKeyboard(
-        [...buttons, Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+        [
+          ...buttons,
+          Markup.button.callback('⏪ В главное меню', 'back_to_menu'),
+        ],
         { columns: 2 }
       )
     )
@@ -177,6 +184,12 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
     ])
   )
 
+  Activity.logButtonAction(
+    ctx.from.id,
+    'dream_selection',
+    `message_${messageId}_index_${index}`
+  )
+
   // Сохраняем ID сообщения с кнопкой поделиться
   if (!sentMessages.has(ctx.chat.id)) {
     sentMessages.set(ctx.chat.id, [])
@@ -188,6 +201,8 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
 
 // --- Возврат в меню ---
 bot.action('back_to_menu', async (ctx) => {
+  // Записываем действие кнопки
+  Activity.logButtonAction(ctx.from.id, 'back_to_menu')
   try {
     await ctx.deleteMessage()
     await ctx.reply('Главное меню:', mainMenu)
@@ -199,6 +214,7 @@ bot.action('back_to_menu', async (ctx) => {
 
 // Обработка начала гадания
 bot.action('start_fortune', async (ctx) => {
+  Activity.logButtonAction(ctx.from.id, 'start_fortune')
   try {
     // Удаляем предыдущее сообщение с инструкцией
     await ctx.deleteMessage()
@@ -235,6 +251,7 @@ bot.action('start_fortune', async (ctx) => {
 
 // Гадание Морфеей говорит
 bot.action('start_morpheus', async (ctx) => {
+  Activity.logButtonAction(ctx.from.id, 'start_morpheus')
   try {
     await ctx.deleteMessage()
 
@@ -270,6 +287,7 @@ bot.action('start_morpheus', async (ctx) => {
 
 // Обработчик для кнопки "Слушать послание"
 bot.action('play_morpheus_audio', async (ctx) => {
+  Activity.logButtonAction(ctx.from.id, 'play_morpheus_audio')
   try {
     await ctx.deleteMessage() // Удаляем сообщение с кнопкой
 

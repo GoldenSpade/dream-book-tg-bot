@@ -2,6 +2,7 @@ import { Markup } from 'telegraf'
 import { getLunarDay } from '../helpers/lunarDay.js'
 import { getGregorianDay } from '../helpers/gregorianDay.js'
 import { getMagicBallImage } from '../fortune_tellings/yes_no/yesNo.js'
+import { Activity } from '../data/db.js'
 
 import {
   dreamBookMenu,
@@ -165,5 +166,34 @@ export const commandHandlers = {
         'Выберите раздел:',
       mainMenu
     )
+  },
+
+  '📊 Статистика': async (ctx) => {
+    // Проверяем, является ли пользователь админом
+    const ADMIN_ID = process.env.ADMIN_ID // Добавьте в .env
+    if (ctx.from.id.toString() !== ADMIN_ID) {
+      return ctx.reply('У вас нет доступа к этой команде.')
+    }
+
+    try {
+      const searchStats = Activity.getSearchStats()
+      const buttonStats = Activity.getButtonStats()
+
+      let message = '📊 <b>Статистика активности:</b>\n\n'
+      message += '<b>Топ поисковых запросов:</b>\n'
+      searchStats.forEach((stat, i) => {
+        message += `${i + 1}. ${stat.query}: ${stat.count}\n`
+      })
+
+      message += '\n<b>Топ кнопок:</b>\n'
+      buttonStats.forEach((stat, i) => {
+        message += `${i + 1}. ${stat.buttonType}: ${stat.count}\n`
+      })
+
+      await ctx.replyWithHTML(message)
+    } catch (error) {
+      console.error('Ошибка получения статистики:', error)
+      ctx.reply('Произошла ошибка при получении статистики.')
+    }
   },
 }
