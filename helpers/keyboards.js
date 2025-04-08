@@ -3,7 +3,7 @@ import { Markup } from 'telegraf'
 // Главное меню (3 кнопки)
 const mainMenu = Markup.keyboard([
   ['📖 Сонник', '🔮 Гадания'],
-  process.env.ADMIN_ID ? ['📋 Инструкция', '📊 Статистика'] : ['📋 Инструкция'],
+  ['📋 Инструкция'],
 ]).resize()
 
 // Меню сонника

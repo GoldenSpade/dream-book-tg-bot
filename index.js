@@ -184,10 +184,11 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
     ])
   )
 
+  // Добавляем в БД запись (текст кнопки найденного сна)
   Activity.logButtonAction(
     ctx.from.id,
-    'dream_selection',
-    `message_${messageId}_index_${index}`
+    'share_action',
+    `Шеринг толкованием: ${dream.word}`
   )
 
   // Сохраняем ID сообщения с кнопкой поделиться
@@ -201,8 +202,6 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
 
 // --- Возврат в меню ---
 bot.action('back_to_menu', async (ctx) => {
-  // Записываем действие кнопки
-  Activity.logButtonAction(ctx.from.id, 'back_to_menu')
   try {
     await ctx.deleteMessage()
     await ctx.reply('Главное меню:', mainMenu)
@@ -214,7 +213,7 @@ bot.action('back_to_menu', async (ctx) => {
 
 // Обработка начала гадания
 bot.action('start_fortune', async (ctx) => {
-  Activity.logButtonAction(ctx.from.id, 'start_fortune')
+  Activity.logButtonAction(ctx.from.id, 'fortune_action', '✨ Гадание Да/Нет')
   try {
     // Удаляем предыдущее сообщение с инструкцией
     await ctx.deleteMessage()
@@ -243,6 +242,12 @@ bot.action('start_fortune', async (ctx) => {
         },
       }
     )
+    // Добавляем запись о кнопке шаринга
+    Activity.logButtonAction(
+      ctx.from.id,
+      'share_action',
+      '📤 Поделиться гаданием Да/Нет'
+    )
   } catch (error) {
     console.error('Ошибка при гадании:', error)
     await ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
@@ -251,7 +256,11 @@ bot.action('start_fortune', async (ctx) => {
 
 // Гадание Морфеей говорит
 bot.action('start_morpheus', async (ctx) => {
-  Activity.logButtonAction(ctx.from.id, 'start_morpheus')
+  Activity.logButtonAction(
+    ctx.from.id,
+    'fortune_action',
+    '🎧 Морфей говорит (Получить послание)'
+  )
   try {
     await ctx.deleteMessage()
 
@@ -287,7 +296,11 @@ bot.action('start_morpheus', async (ctx) => {
 
 // Обработчик для кнопки "Слушать послание"
 bot.action('play_morpheus_audio', async (ctx) => {
-  Activity.logButtonAction(ctx.from.id, 'play_morpheus_audio')
+  Activity.logButtonAction(
+    ctx.from.id,
+    'fortune_action',
+    'Запуск аудио (Морфей Говорит)'
+  )
   try {
     await ctx.deleteMessage() // Удаляем сообщение с кнопкой
 
@@ -316,6 +329,12 @@ bot.action('play_morpheus_audio', async (ctx) => {
           ],
         },
       }
+    )
+    // Добавляем запись о кнопке шаринга
+    Activity.logButtonAction(
+      ctx.from.id,
+      'share_action',
+      '📤 Поделиться посланием (Морфей говорит)'
     )
   } catch (error) {
     console.error('Ошибка при воспроизведении аудио:', error)

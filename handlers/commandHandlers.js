@@ -13,9 +13,17 @@ import {
 
 export const commandHandlers = {
   // Главное меню
-  '📖 Сонник': (ctx) => ctx.reply('📖 Введите слово для поиска', dreamBookMenu),
-  '🔮 Гадания': (ctx) => ctx.reply('🔮 Выберите вариант гадания:', fortuneMenu),
-  '📋 Инструкция': (ctx) =>
+  '📖 Сонник': (ctx) => {
+    ctx.reply('📖 Введите слово для поиска', dreamBookMenu),
+      Activity.logButtonAction(ctx.from.id, 'main_menu_button', '📖 Сонник')
+  },
+  '🔮 Гадания': (ctx) => {
+    Activity.logButtonAction(ctx.from.id, 'main_menu_button', '🔮 Гадания')
+    ctx.reply('🔮 Выберите вариант гадания:', fortuneMenu)
+  },
+
+  '📋 Инструкция': (ctx) => {
+    Activity.logButtonAction(ctx.from.id, 'main_menu_button', '📋 Инструкция')
     ctx.replyWithHTML(
       `<b>📚 Инструкция по использованию бота:</b>\n\n` +
         `🔍 <b>Поиск по слову</b> - введите слово из вашего сна для получения толкования\n\n` +
@@ -29,7 +37,8 @@ export const commandHandlers = {
       Markup.inlineKeyboard([
         [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
       ])
-    ),
+    )
+  },
   '↩️ Назад': (ctx) => ctx.reply('Возвращаемся в главное меню:', mainMenu),
 
   // Разделы сонника
@@ -43,6 +52,7 @@ export const commandHandlers = {
     ),
 
   '🌙 Лунные сны': async (ctx) => {
+    Activity.logButtonAction(ctx.from.id, 'menu_button', '🌙 Лунные сны')
     try {
       const moonInfo = getLunarDay()
       const shareText = `${moonInfo}\n✨ Больше толкований: https://t.me/${ctx.botInfo.username}`
@@ -66,6 +76,12 @@ export const commandHandlers = {
           [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
         ])
       )
+      // Добавляем запись о кнопке шаринга
+      Activity.logButtonAction(
+        ctx.from.id,
+        'share_action',
+        '📤 Поделиться лунным сном'
+      )
     } catch (error) {
       console.error('Ошибка в Лунных снах:', error)
       ctx.reply(
@@ -76,6 +92,7 @@ export const commandHandlers = {
   },
 
   '📅 Календарные сны': async (ctx) => {
+    Activity.logButtonAction(ctx.from.id, 'menu_button', '📅 Календарные сны')
     try {
       const gregorianInfo = getGregorianDay()
       const shareText = `${gregorianInfo}\n✨ Больше толкований: https://t.me/${ctx.botInfo.username}`
@@ -99,6 +116,12 @@ export const commandHandlers = {
           [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
         ])
       )
+      // Добавляем запись о кнопке шаринга
+      Activity.logButtonAction(
+        ctx.from.id,
+        'share_action',
+        '📤 Поделиться календарным сном'
+      )
     } catch (error) {
       console.error('Ошибка в Календарных снах:', error)
       ctx.reply(
@@ -110,6 +133,7 @@ export const commandHandlers = {
 
   // Гадания
   '✨ Гадание Да/Нет': async (ctx) => {
+    Activity.logButtonAction(ctx.from.id, 'fortune_button', '✨ Гадание Да/Нет')
     try {
       const magicBallImage = await getMagicBallImage()
 
@@ -137,6 +161,7 @@ export const commandHandlers = {
   },
 
   '🎧 Морфей говорит': async (ctx) => {
+    Activity.logButtonAction(ctx.from.id, 'fortune_button', '🎧 Морфей говорит (главное меню)')
     try {
       await ctx.replyWithHTML(
         '💫 <b>Тайные врата Морфея открыты...</b>\n\n' +
@@ -166,34 +191,5 @@ export const commandHandlers = {
         'Выберите раздел:',
       mainMenu
     )
-  },
-
-  '📊 Статистика': async (ctx) => {
-    // Проверяем, является ли пользователь админом
-    const ADMIN_ID = process.env.ADMIN_ID // Добавьте в .env
-    if (ctx.from.id.toString() !== ADMIN_ID) {
-      return ctx.reply('У вас нет доступа к этой команде.')
-    }
-
-    try {
-      const searchStats = Activity.getSearchStats()
-      const buttonStats = Activity.getButtonStats()
-
-      let message = '📊 <b>Статистика активности:</b>\n\n'
-      message += '<b>Топ поисковых запросов:</b>\n'
-      searchStats.forEach((stat, i) => {
-        message += `${i + 1}. ${stat.query}: ${stat.count}\n`
-      })
-
-      message += '\n<b>Топ кнопок:</b>\n'
-      buttonStats.forEach((stat, i) => {
-        message += `${i + 1}. ${stat.buttonType}: ${stat.count}\n`
-      })
-
-      await ctx.replyWithHTML(message)
-    } catch (error) {
-      console.error('Ошибка получения статистики:', error)
-      ctx.reply('Произошла ошибка при получении статистики.')
-    }
   },
 }
