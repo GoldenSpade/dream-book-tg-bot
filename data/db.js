@@ -6,6 +6,12 @@ const db = new Database('./data/database.sqlite')
 // Включаем WAL-режим для лучшей производительности
 db.pragma('journal_mode = WAL')
 
+// Увеличиваем размер кэша: до 10 Мб
+db.pragma('cache_size = -10000'); // 10 MB кэша
+
+// Оптимизация синхронизации (риск потери данных при сбое):
+db.pragma('synchronous = NORMAL'); // или OFF для временных данных
+
 // Создание таблицы пользователей, если она не существует
 db.prepare(
   `
