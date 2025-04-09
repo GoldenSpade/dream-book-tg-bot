@@ -185,11 +185,7 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   )
 
   // Добавляем в БД запись (текст кнопки найденного сна)
-  Activity.logButtonAction(
-    ctx.from.id,
-    'share_action',
-    `Шеринг толкованием: ${dream.word}`
-  )
+  Activity.logButtonAction(ctx.from.id, 'share_action', `Сон: ${dream.word}`)
 
   // Сохраняем ID сообщения с кнопкой поделиться
   if (!sentMessages.has(ctx.chat.id)) {
