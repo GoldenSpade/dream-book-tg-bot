@@ -22,9 +22,9 @@ const sentMessages = new Map()
 await initDB()
 
 bot.command('time', async (ctx) => {
-  const fortune = getTimeFortune();
-  await ctx.reply(fortune);
-});
+  const fortune = getTimeFortune()
+  await ctx.reply(fortune)
+})
 
 // Start command остается без изменений
 bot.start(async (ctx) => {
@@ -344,6 +344,36 @@ bot.action('play_morpheus_audio', async (ctx) => {
   }
 })
 
+// Запуск Гадание времени
+bot.action('start_time_fortune', async (ctx) => {
+  Activity.logButtonAction(ctx.from.id, 'start_time_fortune', 'Гадание времени')
+
+  await ctx.answerCbQuery() // убрать "часики"
+  const result = getTimeFortune()
+
+  const shareText = `${result}\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+
+  await ctx.replyWithPhoto(
+    { source: './fortune_tellings/time_reading/img/time_result.jpg' }, // добавь подходящее изображение
+    {
+      caption: result,
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            Markup.button.url(
+              '🕯 Поделиться гаданием',
+              `https://t.me/share/url?url=${encodeURIComponent(
+                `⚜ Гадание времени ⚜\n`
+              )}&text=${encodeURIComponent(shareText)}`
+            ),
+          ],
+          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+        ],
+      },
+    }
+  )
+})
 
 // --- Запуск ---
 bot

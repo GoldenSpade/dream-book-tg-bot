@@ -1,4 +1,3 @@
-import { getTimeFortune } from '../fortune_tellings/time_reading/timeReading.js'
 import { Markup } from 'telegraf'
 import { getLunarDay } from '../helpers/lunarDay.js'
 import { getGregorianDay } from '../helpers/gregorianDay.js'
@@ -191,9 +190,26 @@ export const commandHandlers = {
     }
   },
 
-  '🕒 Гадание времени': (ctx) => {
-    const result = getTimeFortune()
-    ctx.replyWithMarkdown(result)
+  '🕒 Гадание времени': async (ctx) => {
+    await ctx.replyWithVideo(
+      { source: './fortune_tellings/time_reading/video/time_reading.mp4' },
+      {
+        caption:
+          '🕒 *Гадание по времени*\n\n' +
+          '🔮 В это гадание заложен тройной анализ:\n\n' +
+          '🪞 Зеркальные значения\n\n' +
+          '🔂 Повторяющиеся числа\n\n' +
+          '🔢 Нумерология времени\n\n' +
+          'Нажми кнопку ниже, чтобы получить предсказание.',
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [Markup.button.callback('✨ Начать', 'start_time_fortune')],
+            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+          ],
+        },
+      }
+    )
   },
 
   // Стартовая команда
