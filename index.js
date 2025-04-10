@@ -346,7 +346,11 @@ bot.action('play_morpheus_audio', async (ctx) => {
 
 // Запуск Гадание времени
 bot.action('start_time_fortune', async (ctx) => {
-  Activity.logButtonAction(ctx.from.id, 'start_time_fortune', 'Гадание времени')
+  Activity.logButtonAction(
+    ctx.from.id,
+    'start_time_fortune',
+    '✨ Гадание времени'
+  )
 
   await ctx.answerCbQuery() // убрать "часики"
   const result = getTimeFortune()
