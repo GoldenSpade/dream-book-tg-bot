@@ -1,3 +1,4 @@
+import { getTimeFortune } from './fortune_tellings/time_reading/timeReading.js'
 import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
 import { User, Activity, initDB } from './data/db.js'
@@ -19,6 +20,11 @@ const searchResults = new Map()
 const sentMessages = new Map()
 
 await initDB()
+
+bot.command('time', async (ctx) => {
+  const fortune = getTimeFortune();
+  await ctx.reply(fortune);
+});
 
 // Start command остается без изменений
 bot.start(async (ctx) => {
@@ -337,6 +343,7 @@ bot.action('play_morpheus_audio', async (ctx) => {
     await ctx.reply('⚠️ Не удалось воспроизвести сообщение Морфея.', mainMenu)
   }
 })
+
 
 // --- Запуск ---
 bot
