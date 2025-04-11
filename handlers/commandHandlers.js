@@ -81,7 +81,7 @@ export const commandHandlers = {
                 '🌙 Лунный день'
               )}&text=${encodeURIComponent(shareText)}`
             ),
-            Markup.button.callback('✅ Я поделился', 'shared_lunar'),
+            Markup.button.callback('✅ Я поделился(лась)', 'shared_lunar'),
           ],
           [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
         ])
@@ -116,7 +116,7 @@ export const commandHandlers = {
                 '📅 Календарный сон'
               )}&text=${encodeURIComponent(shareText)}`
             ),
-            Markup.button.callback('✅ Я поделился', 'shared_calendar'),
+            Markup.button.callback('✅ Я поделился(лась)', 'shared_calendar'),
           ],
           [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
         ])

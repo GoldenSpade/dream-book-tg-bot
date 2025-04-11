@@ -186,6 +186,10 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
             `Толкование сна "${dream.word}"`
           )}&text=${encodeURIComponent(shareText)}`
         ),
+        Markup.button.callback(
+          '✅ Я поделился(лась)',
+          `shared_dream_${dream.word}`
+        ),
       ],
       [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
     ])
@@ -216,7 +220,11 @@ bot.action('back_to_menu', async (ctx) => {
 
 // Обработка начала гадания
 bot.action('start_fortune', async (ctx) => {
-  Activity.logButtonAction(ctx.from.id, 'fortune_action', '✨ Гадание Да/Нет (запуск)')
+  Activity.logButtonAction(
+    ctx.from.id,
+    'fortune_action',
+    '✨ Гадание Да/Нет (запуск)'
+  )
   try {
     // Удаляем предыдущее сообщение с инструкцией
     await ctx.deleteMessage()
@@ -239,7 +247,7 @@ bot.action('start_fortune', async (ctx) => {
                   ' '
                 )}&text=${encodeURIComponent(shareText)}`
               ),
-              Markup.button.callback('✅ Я поделился', 'shared_yes_no'),
+              Markup.button.callback('✅ Я поделился(лась)', 'shared_yes_no'),
             ],
             [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
           ],
@@ -321,7 +329,7 @@ bot.action('play_morpheus_audio', async (ctx) => {
                   `▶ Голос Морфея 🔊\n`
                 )}&text=${encodeURIComponent(shareText)}`
               ),
-              Markup.button.callback('✅ Я поделился', 'shared_morpheus'),
+              Markup.button.callback('✅ Я поделился(лась)', 'shared_morpheus'),
             ],
             [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
           ],
@@ -361,7 +369,7 @@ bot.action('start_time_fortune', async (ctx) => {
                   `⚜ Гадание времени ⚜\n`
                 )}&text=${encodeURIComponent(shareText)}`
               ),
-              Markup.button.callback('✅ Я поделился', 'shared_time'),
+              Markup.button.callback('✅ Я поделился(лась)', 'shared_time'),
             ],
             [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
           ],
@@ -402,7 +410,10 @@ bot.action('start_time_fortune', async (ctx) => {
                     `❇ Компас судьбы ✴\n`
                   )}&text=${encodeURIComponent(shareText)}`
                 ),
-                Markup.button.callback('✅ Я поделился', 'shared_compass'),
+                Markup.button.callback(
+                  '✅ Я поделился(лась)',
+                  'shared_compass'
+                ),
               ],
               [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
@@ -419,6 +430,17 @@ bot.action('start_time_fortune', async (ctx) => {
   })
 
 // === Обработчики подтверждения шеринга ===
+
+// Поделиться сном
+bot.action(/^shared_dream_(.+)$/, async (ctx) => {
+  const dreamWord = ctx.match[1]
+  Activity.logButtonAction(
+    ctx.from.id,
+    'share_action',
+    `🦉 Поделиться сном: ${dreamWord}`
+  )
+  await ctx.answerCbQuery('Спасибо за поддержку! 🙌')
+})
 
 // Поделиться гаданием Да/Нет
 bot.action('shared_yes_no', async (ctx) => {
@@ -464,12 +486,20 @@ bot.action('shared_compass', async (ctx) => {
 // === Обработчики подтверждения шеринга ===
 
 bot.action('shared_lunar', async (ctx) => {
-  Activity.logButtonAction(ctx.from.id, 'share_action', '🌙 Лунные дни (поделиться)')
+  Activity.logButtonAction(
+    ctx.from.id,
+    'share_action',
+    '🌙 Лунные дни (поделиться)'
+  )
   await ctx.answerCbQuery('Спасибо за поддержку! 🙌')
 })
 
 bot.action('shared_calendar', async (ctx) => {
-  Activity.logButtonAction(ctx.from.id, 'share_action', '📅 Календарные дни (поделиться)')
+  Activity.logButtonAction(
+    ctx.from.id,
+    'share_action',
+    '📅 Календарные дни (поделиться)'
+  )
   await ctx.answerCbQuery('Спасибо за поддержку! 🙌')
 })
 
