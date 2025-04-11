@@ -1,13 +1,14 @@
 {
-  "name": "dream-book-bot",
+  "name": "morfey-bot",
   "version": "1.0.0",
   "description": "Dream book bot",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "export": "node ./admin/exportDB.js",
-    "cleanup": "node ./admin/cleanupDB.js",
     "start": "nodemon index.js",
+    "merge": "node ./admin/mergeFiles.js",
+    "export": "node ./admin/DB_Scripts/exportDB.js",
+    "cleanup": "node ./admin/DB_Scripts/cleanupDB.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

@@ -4,7 +4,7 @@ import path from 'path'
 import readline from 'readline'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const DB_PATH = path.join(__dirname, '../data/database.sqlite')
+const DB_PATH = path.join(__dirname, '../../data/database.sqlite')
 
 const db = new Database(DB_PATH)
 db.pragma('journal_mode = WAL')

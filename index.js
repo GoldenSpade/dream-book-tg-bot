@@ -351,32 +351,36 @@ bot.action('start_time_fortune', async (ctx) => {
     'start_time_fortune',
     '✨ Гадание времени'
   )
+  try {
+    await ctx.deleteMessage()
+    const result = getTimeFortune()
 
-  await ctx.answerCbQuery() // убрать "часики"
-  const result = getTimeFortune()
+    const shareText = `${result}\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
 
-  const shareText = `${result}\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
-
-  await ctx.replyWithPhoto(
-    { source: './fortune_tellings/time_reading/img/time_result.jpg' }, // добавь подходящее изображение
-    {
-      caption: result,
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [
-            Markup.button.url(
-              '🕯 Поделиться гаданием',
-              `https://t.me/share/url?url=${encodeURIComponent(
-                `⚜ Гадание времени ⚜\n`
-              )}&text=${encodeURIComponent(shareText)}`
-            ),
+    await ctx.replyWithPhoto(
+      { source: './fortune_tellings/time_reading/img/time_result.jpg' }, // добавь подходящее изображение
+      {
+        caption: result,
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              Markup.button.url(
+                '🕯 Поделиться гаданием',
+                `https://t.me/share/url?url=${encodeURIComponent(
+                  `⚜ Гадание времени ⚜\n`
+                )}&text=${encodeURIComponent(shareText)}`
+              ),
+            ],
+            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
           ],
-          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-        ],
-      },
-    }
-  )
+        },
+      }
+    )
+  } catch (error) {
+    console.error('Ошибка при гадании:', error)
+    await ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
+  }
 })
 
 // --- Запуск ---
