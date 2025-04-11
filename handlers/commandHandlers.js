@@ -81,12 +81,11 @@ export const commandHandlers = {
                 '🌙 Лунный день'
               )}&text=${encodeURIComponent(shareText)}`
             ),
+            Markup.button.callback('✅ Я поделился', 'shared_lunar'),
           ],
           [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
         ])
       )
-      // Добавляем запись о кнопке шаринга
-      Activity.logButtonAction(ctx.from.id, 'share_action', '🌙 Поделиться')
     } catch (error) {
       console.error('Ошибка в Лунных снах:', error)
       ctx.reply(
@@ -117,12 +116,11 @@ export const commandHandlers = {
                 '📅 Календарный сон'
               )}&text=${encodeURIComponent(shareText)}`
             ),
+            Markup.button.callback('✅ Я поделился', 'shared_calendar'),
           ],
           [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
         ])
       )
-      // Добавляем запись о кнопке шаринга
-      Activity.logButtonAction(ctx.from.id, 'share_action', '📅 Поделиться')
     } catch (error) {
       console.error('Ошибка в Календарных снах:', error)
       ctx.reply(
@@ -134,7 +132,11 @@ export const commandHandlers = {
 
   // Гадания
   '✨ Гадание Да/Нет': async (ctx) => {
-    Activity.logButtonAction(ctx.from.id, 'fortune_button', '✨ Гадание Да/Нет')
+    Activity.logButtonAction(
+      ctx.from.id,
+      'fortune_button',
+      '✨ Гадание Да/Нет (главное меню)'
+    )
     try {
       const magicBallImage = await getMagicBallImage()
 
@@ -209,7 +211,11 @@ export const commandHandlers = {
   },
 
   '🧭 Компас судьбы': async (ctx) => {
-    Activity.logButtonAction(ctx.from.id, 'fortune_button', '🧭 Компас судьбы')
+    Activity.logButtonAction(
+      ctx.from.id,
+      'fortune_button',
+      '🧭 Компас судьбы (главное меню)'
+    )
     try {
       await ctx.replyWithPhoto(
         {

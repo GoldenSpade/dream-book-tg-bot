@@ -216,7 +216,7 @@ bot.action('back_to_menu', async (ctx) => {
 
 // Обработка начала гадания
 bot.action('start_fortune', async (ctx) => {
-  Activity.logButtonAction(ctx.from.id, 'fortune_action', '✨ Гадание Да/Нет')
+  Activity.logButtonAction(ctx.from.id, 'fortune_action', '✨ Гадание Да/Нет (запуск)')
   try {
     // Удаляем предыдущее сообщение с инструкцией
     await ctx.deleteMessage()
@@ -239,17 +239,12 @@ bot.action('start_fortune', async (ctx) => {
                   ' '
                 )}&text=${encodeURIComponent(shareText)}`
               ),
+              Markup.button.callback('✅ Я поделился', 'shared_yes_no'),
             ],
             [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
           ],
         },
       }
-    )
-    // Добавляем запись о кнопке шаринга
-    Activity.logButtonAction(
-      ctx.from.id,
-      'share_action',
-      '✨ Поделиться гаданием Да/Нет'
     )
   } catch (error) {
     console.error('Ошибка при гадании:', error)
@@ -262,7 +257,7 @@ bot.action('start_morpheus', async (ctx) => {
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
-    '🎧 Морфей говорит (Получить послание)'
+    '🎧 Морфей говорит (Запуск)'
   )
   try {
     await ctx.deleteMessage()
@@ -302,7 +297,7 @@ bot.action('play_morpheus_audio', async (ctx) => {
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
-    'Запуск аудио (Морфей Говорит)'
+    '🎧 Морфей говорит (Запуск аудио)'
   )
   try {
     await ctx.deleteMessage() // Удаляем сообщение с кнопкой
@@ -326,17 +321,12 @@ bot.action('play_morpheus_audio', async (ctx) => {
                   `▶ Голос Морфея 🔊\n`
                 )}&text=${encodeURIComponent(shareText)}`
               ),
+              Markup.button.callback('✅ Я поделился', 'shared_morpheus'),
             ],
             [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
           ],
         },
       }
-    )
-    // Добавляем запись о кнопке шаринга
-    Activity.logButtonAction(
-      ctx.from.id,
-      'share_action',
-      '🎵 Поделиться гаданием Морфей говорит'
     )
   } catch (error) {
     console.error('Ошибка при воспроизведении аудио:', error)
@@ -349,7 +339,7 @@ bot.action('start_time_fortune', async (ctx) => {
   Activity.logButtonAction(
     ctx.from.id,
     'start_time_fortune',
-    '⏰ Гадание времени'
+    '⏰ Гадание времени (запуск)'
   )
   try {
     await ctx.deleteMessage()
@@ -371,6 +361,7 @@ bot.action('start_time_fortune', async (ctx) => {
                   `⚜ Гадание времени ⚜\n`
                 )}&text=${encodeURIComponent(shareText)}`
               ),
+              Markup.button.callback('✅ Я поделился', 'shared_time'),
             ],
             [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
           ],
@@ -387,7 +378,7 @@ bot.action('start_time_fortune', async (ctx) => {
     Activity.logButtonAction(
       ctx.from.id,
       'start_compass_fate',
-      '🧭 Компас судьбы (показать ответ)'
+      '🧭 Компас судьбы (запуск)'
     )
     try {
       await ctx.deleteMessage()
@@ -411,18 +402,12 @@ bot.action('start_time_fortune', async (ctx) => {
                     `❇ Компас судьбы ✴\n`
                   )}&text=${encodeURIComponent(shareText)}`
                 ),
-                
+                Markup.button.callback('✅ Я поделился', 'shared_compass'),
               ],
               [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
           },
         }
-      )
-      // Логгируем действие шаринга
-      Activity.logButtonAction(
-        ctx.from.id,
-        'share_action',
-        '🧭 Поделиться Компасом Судьбы'
       )
     } catch (error) {
       console.error('Ошибка в Компас судьбы (видео):', error)
@@ -432,6 +417,61 @@ bot.action('start_time_fortune', async (ctx) => {
       )
     }
   })
+
+// === Обработчики подтверждения шеринга ===
+
+// Поделиться гаданием Да/Нет
+bot.action('shared_yes_no', async (ctx) => {
+  Activity.logButtonAction(
+    ctx.from.id,
+    'share_action',
+    '✨ Поделиться гаданием Да/Нет'
+  )
+  await ctx.answerCbQuery('Спасибо за поддержку! 🙌')
+})
+
+// Поделиться гаданием Морфей говорит
+bot.action('shared_morpheus', async (ctx) => {
+  Activity.logButtonAction(
+    ctx.from.id,
+    'share_action',
+    '🎵 Поделиться гаданием Морфей говорит'
+  )
+  await ctx.answerCbQuery('Спасибо за поддержку! 🙌')
+})
+
+// Поделиться гаданием времени
+bot.action('shared_time', async (ctx) => {
+  Activity.logButtonAction(
+    ctx.from.id,
+    'share_action',
+    '⏰ Поделиться гаданием времени'
+  )
+  await ctx.answerCbQuery('Спасибо за поддержку! 🙌')
+})
+
+// Поделиться Компасом Судьбы
+
+bot.action('shared_compass', async (ctx) => {
+  Activity.logButtonAction(
+    ctx.from.id,
+    'share_action',
+    '🧭 Компас судьбы (поделиться)'
+  )
+  await ctx.answerCbQuery('Спасибо за поддержку! 🙌')
+})
+
+// === Обработчики подтверждения шеринга ===
+
+bot.action('shared_lunar', async (ctx) => {
+  Activity.logButtonAction(ctx.from.id, 'share_action', '🌙 Лунные дни (поделиться)')
+  await ctx.answerCbQuery('Спасибо за поддержку! 🙌')
+})
+
+bot.action('shared_calendar', async (ctx) => {
+  Activity.logButtonAction(ctx.from.id, 'share_action', '📅 Календарные дни (поделиться)')
+  await ctx.answerCbQuery('Спасибо за поддержку! 🙌')
+})
 
 // --- Запуск ---
 bot
