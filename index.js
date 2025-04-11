@@ -1,4 +1,3 @@
-import { getTimeFortune } from './fortune_tellings/time_reading/timeReading.js'
 import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
 import { User, Activity, initDB } from './data/db.js'
@@ -13,6 +12,8 @@ import {
   getRandomMorpheusAudio,
   getMorpheusImage,
 } from './fortune_tellings/morpheus_says/morpheusSays.js'
+import { getTimeFortune } from './fortune_tellings/time_reading/timeReading.js'
+import { getCompassFateVideo } from './fortune_tellings/compass_of_fate/compassOfFate.js'
 
 const bot = new Telegraf(process.env.BOT_API_KEY)
 const CACHE_TTL = 60 * 60 * 1000
@@ -180,7 +181,7 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
     Markup.inlineKeyboard([
       [
         Markup.button.url(
-          '📤 Поделиться сном с друзьями',
+          '🦉 Поделиться сном с друзьями',
           `https://t.me/share/url?url=${encodeURIComponent(
             `Толкование сна "${dream.word}"`
           )}&text=${encodeURIComponent(shareText)}`
@@ -233,7 +234,7 @@ bot.action('start_fortune', async (ctx) => {
           inline_keyboard: [
             [
               Markup.button.url(
-                '🕯️ Поделиться гаданием',
+                '✨ Поделиться гаданием Да/Нет',
                 `https://t.me/share/url?url=${encodeURIComponent(
                   ' '
                 )}&text=${encodeURIComponent(shareText)}`
@@ -248,7 +249,7 @@ bot.action('start_fortune', async (ctx) => {
     Activity.logButtonAction(
       ctx.from.id,
       'share_action',
-      '📤 Поделиться гаданием Да/Нет'
+      '✨ Поделиться гаданием Да/Нет'
     )
   } catch (error) {
     console.error('Ошибка при гадании:', error)
@@ -309,7 +310,7 @@ bot.action('play_morpheus_audio', async (ctx) => {
     // Получаем СЛУЧАЙНОЕ аудио каждый раз при нажатии
     const { path: audioPath, filename: audioFilename } =
       await getRandomMorpheusAudio()
-    const shareText = `🌌 Я услышал(а) голос Морфея в боте "Морфей"!\n\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+    const shareText = `🎵 Я услышал(а) голос Морфея в боте "Морфей"!\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
 
     // Отправляем аудио
     await ctx.replyWithAudio(
@@ -320,13 +321,12 @@ bot.action('play_morpheus_audio', async (ctx) => {
           inline_keyboard: [
             [
               Markup.button.url(
-                '📤 Поделиться',
+                '🎵 Поделиться гаданием Морфей говорит',
                 `https://t.me/share/url?url=${encodeURIComponent(
-                  'Голос Морфея'
+                  `▶ Голос Морфея 🔊\n`
                 )}&text=${encodeURIComponent(shareText)}`
               ),
             ],
-            [Markup.button.callback('🔄 Новое послание', 'start_morpheus')],
             [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
           ],
         },
@@ -336,7 +336,7 @@ bot.action('play_morpheus_audio', async (ctx) => {
     Activity.logButtonAction(
       ctx.from.id,
       'share_action',
-      '📤 Поделиться посланием (Морфей говорит)'
+      '🎵 Поделиться гаданием Морфей говорит'
     )
   } catch (error) {
     console.error('Ошибка при воспроизведении аудио:', error)
@@ -349,7 +349,7 @@ bot.action('start_time_fortune', async (ctx) => {
   Activity.logButtonAction(
     ctx.from.id,
     'start_time_fortune',
-    '✨ Гадание времени'
+    '⏰ Гадание времени'
   )
   try {
     await ctx.deleteMessage()
@@ -366,7 +366,7 @@ bot.action('start_time_fortune', async (ctx) => {
           inline_keyboard: [
             [
               Markup.button.url(
-                '🕯 Поделиться гаданием',
+                '⏰ Поделиться гаданием времени',
                 `https://t.me/share/url?url=${encodeURIComponent(
                   `⚜ Гадание времени ⚜\n`
                 )}&text=${encodeURIComponent(shareText)}`
@@ -381,7 +381,57 @@ bot.action('start_time_fortune', async (ctx) => {
     console.error('Ошибка при гадании:', error)
     await ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
   }
-})
+}),
+  // Компас судьбы
+  bot.action('start_compass_fate', async (ctx) => {
+    Activity.logButtonAction(
+      ctx.from.id,
+      'start_compass_fate',
+      '🧭 Компас судьбы (показать ответ)'
+    )
+    try {
+      await ctx.deleteMessage()
+      await ctx.reply('🧭 Судьба вращается...')
+      await new Promise((r) => setTimeout(r, 2000))
+
+      const { path } = getCompassFateVideo()
+
+      const shareText = `🧭 Я использовал(а) Компас Судьбы в боте "Морфей".\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+
+      await ctx.replyWithVideo(
+        { source: path },
+        {
+          caption: '🕯 Судьба выбрала для тебя направление...',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.url(
+                  '🧭 Поделиться Компасом Судьбы',
+                  `https://t.me/share/url?url=${encodeURIComponent(
+                    `❇ Компас судьбы ✴\n`
+                  )}&text=${encodeURIComponent(shareText)}`
+                ),
+                
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+            ],
+          },
+        }
+      )
+      // Логгируем действие шаринга
+      Activity.logButtonAction(
+        ctx.from.id,
+        'share_action',
+        '🧭 Поделиться Компасом Судьбы'
+      )
+    } catch (error) {
+      console.error('Ошибка в Компас судьбы (видео):', error)
+      await ctx.reply(
+        '⚠️ Видео не удалось отправить. Проверьте наличие файлов.',
+        mainMenu
+      )
+    }
+  })
 
 // --- Запуск ---
 bot
