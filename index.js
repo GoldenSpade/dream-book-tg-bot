@@ -1,7 +1,7 @@
 import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
 import { User, Activity, initDB } from './data/db.js'
-import { data } from './data/data.js'
+import { dataDreams } from './data/dataDreams.js'
 import { commandHandlers } from './handlers/commandHandlers.js'
 import { mainMenu } from './helpers/keyboards.js'
 import { dateFromTimeStamp } from './helpers/dateFromTimeStamp.js'
@@ -101,7 +101,7 @@ bot.on('text', async (ctx) => {
   }
 
   try {
-    const dreams = searchItems(data, target)
+    const dreams = searchItems(dataDreams, target)
 
     // Записываем поисковый запрос
     Activity.logSearchQuery(ctx.from.id, target)
