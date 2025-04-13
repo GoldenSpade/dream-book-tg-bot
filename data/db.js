@@ -7,23 +7,26 @@ const db = new Database('./data/database.sqlite')
 db.pragma('journal_mode = WAL')
 
 // Увеличиваем размер кэша: до 10 Мб
-db.pragma('cache_size = -10000'); // 10 MB кэша
+db.pragma('cache_size = -10000') // 10 MB кэша
 
 // Оптимизация синхронизации (риск потери данных при сбое):
-db.pragma('synchronous = NORMAL'); // или OFF для временных данных
+db.pragma('synchronous = NORMAL') // или OFF для временных данных
 
 // Создание таблицы пользователей, если она не существует
 db.prepare(
   `
-  CREATE TABLE IF NOT EXISTS Users (
+CREATE TABLE IF NOT EXISTS Users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     userId INTEGER UNIQUE NOT NULL,
     firstName TEXT,
     username TEXT,
     lastActivity TEXT DEFAULT (datetime('now')),
     isPremium INTEGER DEFAULT 0,
-    premiumSince TEXT
-  )
+    premiumSince TEXT,
+    "limit" INTEGER DEFAULT 0,
+    chatId INTEGER,
+    language TEXT
+)
 `
 ).run()
 
@@ -55,10 +58,18 @@ db.prepare(
 ).run()
 
 // Добавить в db.js после создания таблиц
-db.prepare('CREATE INDEX IF NOT EXISTS idx_search_queries_user ON SearchQueries(userId)').run()
-db.prepare('CREATE INDEX IF NOT EXISTS idx_search_queries_query ON SearchQueries(query)').run()
-db.prepare('CREATE INDEX IF NOT EXISTS idx_button_actions_user ON ButtonActions(userId)').run()
-db.prepare('CREATE INDEX IF NOT EXISTS idx_button_actions_type ON ButtonActions(buttonType)').run()
+db.prepare(
+  'CREATE INDEX IF NOT EXISTS idx_search_queries_user ON SearchQueries(userId)'
+).run()
+db.prepare(
+  'CREATE INDEX IF NOT EXISTS idx_search_queries_query ON SearchQueries(query)'
+).run()
+db.prepare(
+  'CREATE INDEX IF NOT EXISTS idx_button_actions_user ON ButtonActions(userId)'
+).run()
+db.prepare(
+  'CREATE INDEX IF NOT EXISTS idx_button_actions_type ON ButtonActions(buttonType)'
+).run()
 
 // Функция для инициализации БД
 async function initDB() {
@@ -71,30 +82,31 @@ async function initDB() {
 
 // Методы для работы с пользователями
 const User = {
-  findOrCreate: async ({ userId, firstName, username }) => {
-    if (!userId) {
-      throw new Error('userId is required')
-    }
+  findOrCreate: async ({ userId, firstName, username, chatId, language }) => {
+    if (!userId) throw new Error('userId is required')
 
-    // Проверяем существование пользователя
     let user = db.prepare('SELECT * FROM Users WHERE userId = ?').get(userId)
 
     if (user) {
-      // Обновляем дату последней активности (исправленная строка)
       db.prepare(
-        "UPDATE Users SET lastActivity = datetime('now') WHERE userId = ?"
-      ).run(userId)
+        "UPDATE Users SET lastActivity = datetime('now'), chatId = ?, language = ? WHERE userId = ?"
+      ).run(chatId || null, language || null, userId)
       return [user, false]
     } else {
-      // Создаем нового пользователя
       const result = db
         .prepare(
           `
-        INSERT INTO Users (userId, firstName, username)
-        VALUES (?, ?, ?)
-      `
+          INSERT INTO Users (userId, firstName, username, chatId, language)
+          VALUES (?, ?, ?, ?, ?)
+        `
         )
-        .run(userId, firstName || null, username || null)
+        .run(
+          userId,
+          firstName || null,
+          username || null,
+          chatId || null,
+          language || null
+        )
 
       user = db
         .prepare('SELECT * FROM Users WHERE id = ?')

@@ -29,31 +29,43 @@ bot.command('time', async (ctx) => {
 
 // Start command остается без изменений
 bot.start(async (ctx) => {
-  console.log(`${ctx.message.from.id}`)
   try {
-    const { id, first_name, username } = ctx.from
+    const { id: userId, first_name, username, language_code } = ctx.from
+    const chatId = ctx.chat?.id || null
+
+    // обновляем информацию о пользователе
+    await User.update(userId, {
+      firstName: first_name,
+      username: username || null,
+      chatId: ctx.chat?.id || null,
+      language: language_code || null,
+      lastActivity: new Date().toISOString(),
+    })
 
     // Новый формат вызова
     const [user, created] = await User.findOrCreate({
-      userId: id,
+      userId,
       firstName: first_name,
       username: username || null,
+      chatId,
+      language: language_code || null,
+      limit: 0,
     })
 
     // Остальной код остается без изменений
     if (created) {
       console.log(
-        `✅ Новый пользователь: ${first_name}, ID: ${id}, Date: ${dateFromTimeStamp(
+        `✅ Новый пользователь: ${first_name}, ID: ${userId}, Date: ${dateFromTimeStamp(
           ctx.message.date
         )}`
       )
     } else {
       console.log(
-        `👋 Возвращение пользователя: ${first_name}, ID: ${id}, Date: ${dateFromTimeStamp(
+        `👋 Возвращение пользователя: ${first_name}, ID: ${userId}, Date: ${dateFromTimeStamp(
           ctx.message.date
         )}`
       )
-      await User.update(id, { lastActivity: new Date().toISOString() })
+      await User.update(userId, { lastActivity: new Date().toISOString() })
     }
 
     ctx.reply(
@@ -192,7 +204,7 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   )
 
   // Добавляем в БД запись (текст кнопки найденного сна)
-  Activity.logButtonAction(ctx.from.id, 'share_action', `Сон: ${dream.word}`)
+  Activity.logButtonAction(ctx.from.id, 'share_action', `😴 Сон: ${dream.word}`)
 
   // Сохраняем ID сообщения с кнопкой поделиться
   if (!sentMessages.has(ctx.chat.id)) {

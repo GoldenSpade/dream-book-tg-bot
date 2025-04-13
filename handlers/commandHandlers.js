@@ -2,7 +2,7 @@ import { Markup } from 'telegraf'
 import { getLunarDay } from '../helpers/lunarDay.js'
 import { getGregorianDay } from '../helpers/gregorianDay.js'
 import { getMagicBallImage } from '../fortune_tellings/yes_no/yesNo.js'
-import { Activity } from '../data/db.js'
+import { User, Activity } from '../data/db.js'
 
 import {
   dreamBookMenu,
@@ -16,14 +16,23 @@ export const commandHandlers = {
   '📖 Сонник': (ctx) => {
     ctx.reply('📖 Введите слово для поиска', dreamBookMenu),
       Activity.logButtonAction(ctx.from.id, 'main_menu_button', '📖 Сонник')
+    User.update(ctx.from.id, {
+      lastActivity: new Date().toISOString(),
+    })
   },
   '🔮 Гадания': (ctx) => {
     Activity.logButtonAction(ctx.from.id, 'main_menu_button', '🔮 Гадания')
+    User.update(ctx.from.id, {
+      lastActivity: new Date().toISOString(),
+    })
     ctx.reply('🔮 Выберите вариант гадания:', fortuneMenu)
   },
 
   '📋 Инструкция': (ctx) => {
     Activity.logButtonAction(ctx.from.id, 'main_menu_button', '📋 Инструкция')
+    User.update(ctx.from.id, {
+      lastActivity: new Date().toISOString(),
+    })
     ctx.replyWithHTML(
       `<b>📚 Инструкция по использованию бота:</b>\n\n` +
         `🔍 <b>Поиск по слову</b> - введите слово из вашего сна для получения толкования\n\n` +
@@ -62,6 +71,9 @@ export const commandHandlers = {
 
   '🌙 Лунные сны': async (ctx) => {
     Activity.logButtonAction(ctx.from.id, 'menu_button', '🌙 Лунные сны')
+    User.update(ctx.from.id, {
+      lastActivity: new Date().toISOString(),
+    })
     try {
       const moonInfo = getLunarDay()
       const shareText = `${moonInfo}\n✨ Больше толкований: https://t.me/${ctx.botInfo.username}`
@@ -96,6 +108,9 @@ export const commandHandlers = {
 
   '📅 Календарные сны': async (ctx) => {
     Activity.logButtonAction(ctx.from.id, 'menu_button', '📅 Календарные сны')
+    User.update(ctx.from.id, {
+      lastActivity: new Date().toISOString(),
+    })
     try {
       const gregorianInfo = getGregorianDay()
       const shareText = `${gregorianInfo}\n✨ Больше толкований: https://t.me/${ctx.botInfo.username}`
@@ -135,6 +150,9 @@ export const commandHandlers = {
       'fortune_button',
       '✨ Гадание Да/Нет (главное меню)'
     )
+    User.update(ctx.from.id, {
+      lastActivity: new Date().toISOString(),
+    })
     try {
       const magicBallImage = await getMagicBallImage()
 
@@ -167,6 +185,9 @@ export const commandHandlers = {
       'fortune_button',
       '🎧 Морфей говорит (главное меню)'
     )
+    User.update(ctx.from.id, {
+      lastActivity: new Date().toISOString(),
+    })
     try {
       await ctx.replyWithHTML(
         '💫 <b>Тайные врата Морфея открыты...</b>\n\n' +
@@ -187,6 +208,14 @@ export const commandHandlers = {
   },
 
   '⏰ Гадание времени': async (ctx) => {
+    Activity.logButtonAction(
+      ctx.from.id,
+      'fortune_button',
+      '⏰ Гадание времени (главное меню)'
+    )
+    User.update(ctx.from.id, {
+      lastActivity: new Date().toISOString(),
+    })
     await ctx.replyWithVideo(
       { source: './fortune_tellings/time_reading/video/time_reading.mp4' },
       {
@@ -214,6 +243,9 @@ export const commandHandlers = {
       'fortune_button',
       '🧭 Компас судьбы (главное меню)'
     )
+    User.update(ctx.from.id, {
+      lastActivity: new Date().toISOString(),
+    })
     try {
       await ctx.replyWithPhoto(
         {
