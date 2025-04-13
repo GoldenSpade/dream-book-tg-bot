@@ -76,7 +76,7 @@ export const commandHandlers = {
     })
     try {
       const moonInfo = getLunarDay()
-      const shareText = `${moonInfo}\n✨ Больше толкований: https://t.me/${ctx.botInfo.username}`
+      const shareText = `${moonInfo}\n✨ Больше толкований: https://t.me/MorfejBot?start=utm_lunar`
 
       await ctx.replyWithHTML(
         `${moonInfo}\n\n` +
@@ -113,7 +113,7 @@ export const commandHandlers = {
     })
     try {
       const gregorianInfo = getGregorianDay()
-      const shareText = `${gregorianInfo}\n✨ Больше толкований: https://t.me/${ctx.botInfo.username}`
+      const shareText = `${gregorianInfo}\n✨ Больше толкований: https://t.me/MorfejBot?start=utm_calendar`
 
       await ctx.replyWithHTML(
         `${gregorianInfo}\n\n` +

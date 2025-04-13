@@ -52,6 +52,18 @@ bot.start(async (ctx) => {
       limit: 0,
     })
 
+    // логируем переход по UTM
+    if (ctx.startPayload) {
+      Activity.logButtonAction(
+        ctx.from.id,
+        'utm_referral_start',
+        ctx.startPayload
+      )
+    }
+
+    console.log( 'PayLoad', ctx.startPayload);
+    
+
     // Остальной код остается без изменений
     if (created) {
       console.log(
@@ -183,9 +195,7 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   const shareText = `${dream.description.substring(
     0,
     100
-  )}...\n\n✨ Больше толкований в Телеграм боте Морфей: https://t.me/${
-    ctx.botInfo.username
-  }`
+  )}...\n\n✨ Больше толкований в Телеграм боте Морфей: https://t.me/MorfejBot?start=utm_dream`
 
   // Добавляем кнопку "Поделиться"
   const shareMessage = await ctx.reply(
@@ -239,7 +249,7 @@ bot.action('start_fortune', async (ctx) => {
 
     // Получаем случайное гадание
     const gifBuffer = await getRandomFortune()
-    const shareText = `🕯️ Я погадал(а) в боте "Морфей"!\n\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+    const shareText = `🕯️ Я погадал(а) в боте \"Морфей\"!\n\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_yesno`
 
     // Отправляем результат гадания
     await ctx.replyWithVideo(
@@ -320,7 +330,7 @@ bot.action('play_morpheus_audio', async (ctx) => {
     // Получаем СЛУЧАЙНОЕ аудио каждый раз при нажатии
     const { path: audioPath, filename: audioFilename } =
       await getRandomMorpheusAudio()
-    const shareText = `🎵 Я услышал(а) голос Морфея в боте "Морфей"!\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+    const shareText = `🎵 Я услышал(а) голос Морфея в боте \"Морфей\"!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_morpheus`
 
     // Отправляем аудио
     await ctx.replyWithAudio(
@@ -359,7 +369,7 @@ bot.action('start_time_fortune', async (ctx) => {
     await ctx.deleteMessage()
     const result = getTimeFortune()
 
-    const shareText = `${result}\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+    const shareText = `${result}\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_time`
 
     await ctx.replyWithPhoto(
       { source: './fortune_tellings/time_reading/img/time_result.jpg' }, // добавь подходящее изображение
@@ -400,7 +410,7 @@ bot.action('start_time_fortune', async (ctx) => {
 
       const { path } = getCompassFateVideo()
 
-      const shareText = `🧭 Я использовал(а) Компас Судьбы в боте "Морфей".\n✨ Попробуй и ты: https://t.me/${ctx.botInfo.username}`
+      const shareText = `🧭 Я использовал(а) Компас Судьбы в боте \"Морфей\".\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_compass`
 
       await ctx.replyWithVideo(
         { source: path },
