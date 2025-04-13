@@ -20,6 +20,23 @@ const CACHE_TTL = 60 * 60 * 1000
 const searchResults = new Map()
 const sentMessages = new Map()
 
+// 🧹 Автоочистка устаревших результатов поиска каждые 5 минут
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, value] of searchResults.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      searchResults.delete(key)
+    }
+  }
+}, 5 * 60 * 1000)
+
+bot.use(async (ctx, next) => {
+  if (!ctx.from) return next()
+  const [user] = await User.findOrCreate({ userId: ctx.from.id })
+  ctx.state.referrerId = user?.referrerId || null
+  await next()
+})
+
 await initDB()
 
 bot.command('time', async (ctx) => {
@@ -33,16 +50,25 @@ bot.start(async (ctx) => {
     const { id: userId, first_name, username, language_code } = ctx.from
     const chatId = ctx.chat?.id || null
 
-    // обновляем информацию о пользователе
-    await User.update(userId, {
-      firstName: first_name,
-      username: username || null,
-      chatId: ctx.chat?.id || null,
-      language: language_code || null,
-      lastActivity: new Date().toISOString(),
-    })
+    let cleanPayload = null
+    let referrerId = null
 
-    // Новый формат вызова
+    // 1. Извлекаем реф. ID и очищаем buttonData
+    if (ctx.startPayload) {
+      const match = ctx.startPayload.match(/^(utm_[a-zA-Z0-9]+)_ref_(\d+)$/)
+
+      if (match) {
+        cleanPayload = match[1]
+        const extractedId = parseInt(match[2])
+
+        if (extractedId && extractedId !== ctx.from.id) {
+          referrerId = extractedId
+          ctx.state.referrerId = referrerId
+        }
+      }
+    }
+
+    // 2. Создаём или обновляем пользователя (без записи referrerId в Users)
     const [user, created] = await User.findOrCreate({
       userId,
       firstName: first_name,
@@ -52,43 +78,39 @@ bot.start(async (ctx) => {
       limit: 0,
     })
 
-    // логируем переход по UTM
-    if (ctx.startPayload) {
+    await User.update(userId, {
+      firstName: first_name,
+      username: username || null,
+      chatId,
+      language: language_code || null,
+      lastActivity: new Date().toISOString(),
+    })
+
+    // 3. Записываем в ButtonActions
+    if (cleanPayload) {
       Activity.logButtonAction(
         ctx.from.id,
         'utm_referral_start',
-        ctx.startPayload
+        cleanPayload,
+        referrerId
       )
     }
 
-    console.log( 'PayLoad', ctx.startPayload);
-    
-
-    // Остальной код остается без изменений
     if (created) {
       console.log(
-        `✅ Новый пользователь: ${first_name}, ID: ${userId}, Date: ${dateFromTimeStamp(
-          ctx.message.date
-        )}`
+        `✅ Новый пользователь: ${first_name}, ID: ${userId}, Ref: ${referrerId}`
       )
     } else {
-      console.log(
-        `👋 Возвращение пользователя: ${first_name}, ID: ${userId}, Date: ${dateFromTimeStamp(
-          ctx.message.date
-        )}`
-      )
-      await User.update(userId, { lastActivity: new Date().toISOString() })
+      console.log(`👋 Возвращение пользователя: ${first_name}, ID: ${userId}`)
     }
 
-    ctx.reply(
+    await ctx.reply(
       'Привет! Введите слово для поиска трактования сна или выберите опцию из меню.',
       mainMenu
     )
   } catch (err) {
     console.error('Ошибка при обработке /start:', err)
-    ctx.reply(
-      'Произошла ошибка при запуске бота. Пожалуйста, попробуйте позже.'
-    )
+    await ctx.reply('Произошла ошибка при запуске бота. Попробуйте позже.')
   }
 })
 
@@ -99,7 +121,7 @@ Object.entries(commandHandlers).forEach(([command, handler]) => {
 // Регистрируем все исходящие сообщения бота
 bot.use(async (ctx, next) => {
   await next()
-  if (ctx.message && ctx.from.id === ctx.botInfo.id) {
+  if (ctx.message && ctx.botInfo && ctx.from.id === ctx.botInfo.id) {
     if (!sentMessages.has(ctx.chat.id)) {
       sentMessages.set(ctx.chat.id, [])
     }
@@ -117,10 +139,10 @@ bot.on('text', async (ctx) => {
     }, word: ${target}, date: ${dateFromTimeStamp(ctx.message.date)}`
   )
 
-  if (commandHandlers[target]) return
+  if (typeof commandHandlers[target] === 'function') return
 
   if (target.length < 3) {
-    ctx.reply('🔍 Слово должно быть длиннее 3 символов.', mainMenu)
+    await ctx.reply('🔍 Слово должно быть длиннее 3 символов.', mainMenu)
     return
   }
 
@@ -131,7 +153,7 @@ bot.on('text', async (ctx) => {
     Activity.logSearchQuery(ctx.from.id, target)
 
     if (!dreams.length) {
-      ctx.reply('😕 Ничего не найдено. Попробуйте другое слово.', mainMenu)
+      await ctx.reply('😕 Ничего не найдено. Попробуйте другое слово.', mainMenu)
       return
     }
 
@@ -195,7 +217,9 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   const shareText = `${dream.description.substring(
     0,
     100
-  )}...\n\n✨ Больше толкований в Телеграм боте Морфей: https://t.me/MorfejBot?start=utm_dream`
+  )}...\n\n✨ Больше толкований в Телеграм боте Морфей: https://t.me/MorfejBot?start=utm_dream_ref_${
+    ctx.from.id
+  }`
 
   // Добавляем кнопку "Поделиться"
   const shareMessage = await ctx.reply(
@@ -214,7 +238,12 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   )
 
   // Добавляем в БД запись (текст кнопки найденного сна)
-  Activity.logButtonAction(ctx.from.id, 'share_action', `😴 Сон: ${dream.word}`)
+  Activity.logButtonAction(
+    ctx.from.id,
+    'share_action',
+    `😴 Сон: ${dream.word}`,
+    ctx.state.referrerId
+  )
 
   // Сохраняем ID сообщения с кнопкой поделиться
   if (!sentMessages.has(ctx.chat.id)) {
@@ -241,7 +270,8 @@ bot.action('start_fortune', async (ctx) => {
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
-    '✨ Гадание Да/Нет (запуск)'
+    '✨ Гадание Да/Нет (запуск)',
+    ctx.state.referrerId
   )
   try {
     // Удаляем предыдущее сообщение с инструкцией
@@ -249,7 +279,7 @@ bot.action('start_fortune', async (ctx) => {
 
     // Получаем случайное гадание
     const gifBuffer = await getRandomFortune()
-    const shareText = `🕯️ Я погадал(а) в боте \"Морфей\"!\n\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_yesno`
+    const shareText = `🕯️ Я погадал(а) в боте \"Морфей\"!\n\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_yesno_ref_${ctx.from.id}`
 
     // Отправляем результат гадания
     await ctx.replyWithVideo(
@@ -282,7 +312,8 @@ bot.action('start_morpheus', async (ctx) => {
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
-    '🎧 Морфей говорит (Запуск)'
+    '🎧 Морфей говорит (Запуск)',
+    ctx.state.referrerId
   )
   try {
     await ctx.deleteMessage()
@@ -322,7 +353,8 @@ bot.action('play_morpheus_audio', async (ctx) => {
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
-    '🎧 Морфей говорит (Запуск аудио)'
+    '🎧 Морфей говорит (Запуск аудио)',
+    ctx.state.referrerId
   )
   try {
     await ctx.deleteMessage() // Удаляем сообщение с кнопкой
@@ -330,7 +362,7 @@ bot.action('play_morpheus_audio', async (ctx) => {
     // Получаем СЛУЧАЙНОЕ аудио каждый раз при нажатии
     const { path: audioPath, filename: audioFilename } =
       await getRandomMorpheusAudio()
-    const shareText = `🎵 Я услышал(а) голос Морфея в боте \"Морфей\"!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_morpheus`
+    const shareText = `🎵 Я услышал(а) голос Морфея в боте \"Морфей\"!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_morpheus_ref_${ctx.from.id}`
 
     // Отправляем аудио
     await ctx.replyWithAudio(
@@ -363,13 +395,14 @@ bot.action('start_time_fortune', async (ctx) => {
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
-    '⏰ Гадание времени (запуск)'
+    '⏰ Гадание времени (запуск)',
+    ctx.state.referrerId
   )
   try {
     await ctx.deleteMessage()
     const result = getTimeFortune()
 
-    const shareText = `${result}\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_time`
+    const shareText = `${result}\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_time_ref_${ctx.from.id}`
 
     await ctx.replyWithPhoto(
       { source: './fortune_tellings/time_reading/img/time_result.jpg' }, // добавь подходящее изображение
@@ -395,50 +428,51 @@ bot.action('start_time_fortune', async (ctx) => {
     console.error('Ошибка при гадании:', error)
     await ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
   }
-}),
-  // Компас судьбы
-  bot.action('start_compass_fate', async (ctx) => {
-    Activity.logButtonAction(
-      ctx.from.id,
-      'fortune_action',
-      '🧭 Компас судьбы (запуск)'
-    )
-    try {
-      await ctx.deleteMessage()
-      await ctx.reply('🧭 Судьба вращается...')
-      await new Promise((r) => setTimeout(r, 2000))
+})
+// Компас судьбы
+bot.action('start_compass_fate', async (ctx) => {
+  Activity.logButtonAction(
+    ctx.from.id,
+    'fortune_action',
+    '🧭 Компас судьбы (запуск)',
+    ctx.state.referrerId
+  )
+  try {
+    await ctx.deleteMessage()
+    await ctx.reply('🧭 Судьба вращается...')
+    await new Promise((r) => setTimeout(r, 2000))
 
-      const { path } = getCompassFateVideo()
+    const { path } = getCompassFateVideo()
 
-      const shareText = `🧭 Я использовал(а) Компас Судьбы в боте \"Морфей\".\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_compass`
+    const shareText = `🧭 Я использовал(а) Компас Судьбы в боте \"Морфей\".\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_compass_ref_${ctx.from.id}`
 
-      await ctx.replyWithVideo(
-        { source: path },
-        {
-          caption: '🕯 Судьба выбрала для тебя направление...',
-          reply_markup: {
-            inline_keyboard: [
-              [
-                Markup.button.url(
-                  '🧭 Поделиться Компасом Судьбы',
-                  `https://t.me/share/url?url=${encodeURIComponent(
-                    `❇ Компас судьбы ✴\n`
-                  )}&text=${encodeURIComponent(shareText)}`
-                ),
-              ],
-              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+    await ctx.replyWithVideo(
+      { source: path },
+      {
+        caption: '🕯 Судьба выбрала для тебя направление...',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              Markup.button.url(
+                '🧭 Поделиться Компасом Судьбы',
+                `https://t.me/share/url?url=${encodeURIComponent(
+                  `❇ Компас судьбы ✴\n`
+                )}&text=${encodeURIComponent(shareText)}`
+              ),
             ],
-          },
-        }
-      )
-    } catch (error) {
-      console.error('Ошибка в Компас судьбы (видео):', error)
-      await ctx.reply(
-        '⚠️ Видео не удалось отправить. Проверьте наличие файлов.',
-        mainMenu
-      )
-    }
-  })
+            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+          ],
+        },
+      }
+    )
+  } catch (error) {
+    console.error('Ошибка в Компас судьбы (видео):', error)
+    await ctx.reply(
+      '⚠️ Видео не удалось отправить. Проверьте наличие файлов.',
+      mainMenu
+    )
+  }
+})
 
 // --- Запуск ---
 bot

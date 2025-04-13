@@ -51,6 +51,7 @@ db.prepare(
     userId INTEGER NOT NULL,
     buttonType TEXT NOT NULL,
     buttonData TEXT,
+    referrerId INTEGER,
     timestamp TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (userId) REFERENCES Users(userId)
   )
@@ -142,13 +143,16 @@ const Activity = {
   },
 
   // Запись нажатия кнопки
-  logButtonAction: (userId, buttonType, buttonData = null) => {
+  logButtonAction: (
+    userId,
+    buttonType,
+    buttonData = null,
+    referrerId = null
+  ) => {
     db.prepare(
-      `
-      INSERT INTO ButtonActions (userId, buttonType, buttonData)
-      VALUES (?, ?, ?)
-    `
-    ).run(userId, buttonType, buttonData)
+      `INSERT INTO ButtonActions (userId, buttonType, buttonData, referrerId)
+       VALUES (?, ?, ?, ?)`
+    ).run(userId, buttonType, buttonData, referrerId)
   },
 
   // Получение статистики поисковых запросов

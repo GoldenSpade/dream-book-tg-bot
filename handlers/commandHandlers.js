@@ -13,27 +13,42 @@ import {
 
 export const commandHandlers = {
   // Главное меню
-  '📖 Сонник': (ctx) => {
-    ctx.reply('📖 Введите слово для поиска', dreamBookMenu),
-      Activity.logButtonAction(ctx.from.id, 'main_menu_button', '📖 Сонник')
-    User.update(ctx.from.id, {
+  '📖 Сонник': async (ctx) => {
+    await ctx.reply('📖 Введите слово для поиска', dreamBookMenu)
+    Activity.logButtonAction(
+      ctx.from.id,
+      'main_menu_button',
+      '📖 Сонник',
+      ctx.state.referrerId
+    )
+    await User.update(ctx.from.id, {
       lastActivity: new Date().toISOString(),
     })
   },
-  '🔮 Гадания': (ctx) => {
-    Activity.logButtonAction(ctx.from.id, 'main_menu_button', '🔮 Гадания')
-    User.update(ctx.from.id, {
+  '🔮 Гадания': async (ctx) => {
+    Activity.logButtonAction(
+      ctx.from.id,
+      'main_menu_button',
+      '🔮 Гадания',
+      ctx.state.referrerId
+    )
+    await User.update(ctx.from.id, {
       lastActivity: new Date().toISOString(),
     })
-    ctx.reply('🔮 Выберите вариант гадания:', fortuneMenu)
+    await ctx.reply('🔮 Выберите вариант гадания:', fortuneMenu)
   },
 
-  '📋 Инструкция': (ctx) => {
-    Activity.logButtonAction(ctx.from.id, 'main_menu_button', '📋 Инструкция')
-    User.update(ctx.from.id, {
+  '📋 Инструкция': async (ctx) => {
+    Activity.logButtonAction(
+      ctx.from.id,
+      'main_menu_button',
+      '📋 Инструкция',
+      ctx.state.referrerId
+    )
+    await User.update(ctx.from.id, {
       lastActivity: new Date().toISOString(),
     })
-    ctx.replyWithHTML(
+    await ctx.replyWithHTML(
       `<b>📚 Инструкция по использованию бота:</b>\n\n` +
         `🔍 <b>Поиск по слову</b> - введите слово из вашего сна для получения толкования\n\n` +
         `🌙 <b>Лунные сны</b> - узнайте значение сна по текущему лунному дню\n\n` +
@@ -57,11 +72,12 @@ export const commandHandlers = {
       ])
     )
   },
-  '↩️ Назад': (ctx) => ctx.reply('Возвращаемся в главное меню:', mainMenu),
+  '↩️ Назад': async (ctx) =>
+    await ctx.reply('Возвращаемся в главное меню:', mainMenu),
 
   // Разделы сонника
-  '🔍 Поиск по слову': (ctx) =>
-    ctx.replyWithHTML(
+  '🔍 Поиск по слову': async (ctx) =>
+    await ctx.replyWithHTML(
       '🔎 <b>Введите слово из вашего сна:</b>\n\n' +
         '<i>• Используйте слова от 3 символов\n' +
         '• Заменяйте "ё" на "е"\n' +
@@ -70,13 +86,18 @@ export const commandHandlers = {
     ),
 
   '🌙 Лунные сны': async (ctx) => {
-    Activity.logButtonAction(ctx.from.id, 'menu_button', '🌙 Лунные сны')
-    User.update(ctx.from.id, {
+    Activity.logButtonAction(
+      ctx.from.id,
+      'menu_button',
+      '🌙 Лунные сны',
+      ctx.state.referrerId
+    )
+    await User.update(ctx.from.id, {
       lastActivity: new Date().toISOString(),
     })
     try {
       const moonInfo = getLunarDay()
-      const shareText = `${moonInfo}\n✨ Больше толкований: https://t.me/MorfejBot?start=utm_lunar`
+      const shareText = `${moonInfo}\n✨ Больше толкований: https://t.me/MorfejBot?start=utm_lunar_ref_${ctx.from.id}`
 
       await ctx.replyWithHTML(
         `${moonInfo}\n\n` +
@@ -99,7 +120,7 @@ export const commandHandlers = {
       )
     } catch (error) {
       console.error('Ошибка в Лунных снах:', error)
-      ctx.reply(
+      await ctx.reply(
         '⚠️ Произошла ошибка при получении лунных данных.',
         backKeyboard
       )
@@ -107,13 +128,18 @@ export const commandHandlers = {
   },
 
   '📅 Календарные сны': async (ctx) => {
-    Activity.logButtonAction(ctx.from.id, 'menu_button', '📅 Календарные сны')
-    User.update(ctx.from.id, {
+    Activity.logButtonAction(
+      ctx.from.id,
+      'menu_button',
+      '📅 Календарные сны',
+      ctx.state.referrerId
+    )
+    await User.update(ctx.from.id, {
       lastActivity: new Date().toISOString(),
     })
     try {
       const gregorianInfo = getGregorianDay()
-      const shareText = `${gregorianInfo}\n✨ Больше толкований: https://t.me/MorfejBot?start=utm_calendar`
+      const shareText = `${gregorianInfo}\n✨ Больше толкований: https://t.me/MorfejBot?start=utm_calendar_ref_${ctx.from.id}`
 
       await ctx.replyWithHTML(
         `${gregorianInfo}\n\n` +
@@ -136,7 +162,7 @@ export const commandHandlers = {
       )
     } catch (error) {
       console.error('Ошибка в Календарных снах:', error)
-      ctx.reply(
+      await ctx.reply(
         '⚠️ Произошла ошибка при получении календарных данных.',
         backKeyboard
       )
@@ -148,9 +174,10 @@ export const commandHandlers = {
     Activity.logButtonAction(
       ctx.from.id,
       'fortune_button',
-      '✨ Гадание Да/Нет (главное меню)'
+      '✨ Гадание Да/Нет (главное меню)',
+      ctx.state.referrerId
     )
-    User.update(ctx.from.id, {
+    await User.update(ctx.from.id, {
       lastActivity: new Date().toISOString(),
     })
     try {
@@ -172,7 +199,7 @@ export const commandHandlers = {
       )
     } catch (error) {
       console.error('Ошибка в Гадании:', error)
-      ctx.replyWithHTML(
+      await ctx.replyWithHTML(
         '⚠️ <b>Произошла ошибка</b>\nПопробуйте позже',
         backKeyboard
       )
@@ -183,9 +210,10 @@ export const commandHandlers = {
     Activity.logButtonAction(
       ctx.from.id,
       'fortune_button',
-      '🎧 Морфей говорит (главное меню)'
+      '🎧 Морфей говорит (главное меню)',
+      ctx.state.referrerId
     )
-    User.update(ctx.from.id, {
+    await User.update(ctx.from.id, {
       lastActivity: new Date().toISOString(),
     })
     try {
@@ -200,7 +228,7 @@ export const commandHandlers = {
       )
     } catch (error) {
       console.error('Ошибка в Морфей говорит:', error)
-      ctx.replyWithHTML(
+      await ctx.replyWithHTML(
         '⚠️ <b>Произошла ошибка</b>\nПопробуйте позже',
         backKeyboard
       )
@@ -211,9 +239,10 @@ export const commandHandlers = {
     Activity.logButtonAction(
       ctx.from.id,
       'fortune_button',
-      '⏰ Гадание времени (главное меню)'
+      '⏰ Гадание времени (главное меню)',
+      ctx.state.referrerId
     )
-    User.update(ctx.from.id, {
+    await User.update(ctx.from.id, {
       lastActivity: new Date().toISOString(),
     })
     await ctx.replyWithVideo(
@@ -241,9 +270,10 @@ export const commandHandlers = {
     Activity.logButtonAction(
       ctx.from.id,
       'fortune_button',
-      '🧭 Компас судьбы (главное меню)'
+      '🧭 Компас судьбы (главное меню)',
+      ctx.state.referrerId
     )
-    User.update(ctx.from.id, {
+    await User.update(ctx.from.id, {
       lastActivity: new Date().toISOString(),
     })
     try {
@@ -275,8 +305,8 @@ export const commandHandlers = {
   },
 
   // Стартовая команда
-  '/start': (ctx) => {
-    return ctx.replyWithHTML(
+  '/start': async (ctx) => {
+    return await ctx.replyWithHTML(
       '🌙 <b>Добро пожаловать к "Морфею"!</b>\n\n' +
         '• <b>📖 Сонник</b> - толкование ваших снов\n' +
         '• <b>🔮 Гадания</b> - ответы на вопросы\n' +
