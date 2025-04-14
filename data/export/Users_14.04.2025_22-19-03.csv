@@ -1,0 +1,5 @@
+id;userId;chatId;firstName;userName;language;lastActivity;isPremium;premiumSince;limit
+1;7606207943;NULL;"Vlad";"irobot_01";NULL;"2025-04-14 19:06:58";0;NULL;0
+2;5036363594;NULL;"Vlad";"vlad_01_1";NULL;"2025-04-14 19:03:30";0;NULL;0
+3;123456789;123456789;"Иван";NULL;"ru";"2025-04-14 19:17:49";0;NULL;0
+4;12345678912;123456789;"Иван";"ivan_the_user";"ru";"2025-04-14 19:18:43";0;NULL;0

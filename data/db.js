@@ -83,7 +83,7 @@ async function initDB() {
 
 // Методы для работы с пользователями
 const User = {
-  findOrCreate: async ({ userId, firstName, username, chatId, language }) => {
+  findOrCreate: async ({ userId, firstName, userName, chatId, language }) => {
     if (!userId) throw new Error('userId is required')
 
     let user = db.prepare('SELECT * FROM Users WHERE userId = ?').get(userId)
@@ -97,14 +97,14 @@ const User = {
       const result = db
         .prepare(
           `
-          INSERT INTO Users (userId, firstName, username, chatId, language)
+          INSERT INTO Users (userId, firstName, userName, chatId, language)
           VALUES (?, ?, ?, ?, ?)
         `
         )
         .run(
           userId,
           firstName || null,
-          username || null,
+          userName || null,
           chatId || null,
           language || null
         )
