@@ -72,15 +72,14 @@ bot.start(async (ctx) => {
     const [user, created] = await User.findOrCreate({
       userId,
       firstName: first_name,
-      username: username || null,
+      userName: username || null,
       chatId,
       language: language_code || null,
-      limit: 0,
     })
 
     await User.update(userId, {
       firstName: first_name,
-      username: username || null,
+      userName: username || null,
       chatId,
       language: language_code || null,
       lastActivity: new Date().toISOString(),
@@ -134,7 +133,7 @@ bot.on('text', async (ctx) => {
   const { text: target, from, message_id } = ctx.message
 
   console.log(
-    `first_name: ${from.first_name}, username: ${
+    `first_name: ${from.first_name}, userName: ${
       from.username
     }, word: ${target}, date: ${dateFromTimeStamp(ctx.message.date)}`
   )
@@ -153,7 +152,10 @@ bot.on('text', async (ctx) => {
     Activity.logSearchQuery(ctx.from.id, target)
 
     if (!dreams.length) {
-      await ctx.reply('😕 Ничего не найдено. Попробуйте другое слово.', mainMenu)
+      await ctx.reply(
+        '😕 Ничего не найдено. Попробуйте другое слово.',
+        mainMenu
+      )
       return
     }
 

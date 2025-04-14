@@ -18,14 +18,14 @@ db.prepare(
 CREATE TABLE IF NOT EXISTS Users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     userId INTEGER UNIQUE NOT NULL,
+    chatId INTEGER,
     firstName TEXT,
-    username TEXT,
+    userName TEXT,
+    language TEXT,
     lastActivity TEXT DEFAULT (datetime('now')),
     isPremium INTEGER DEFAULT 0,
     premiumSince TEXT,
-    "limit" INTEGER DEFAULT 0,
-    chatId INTEGER,
-    language TEXT
+    "limit" INTEGER DEFAULT 0
 )
 `
 ).run()
