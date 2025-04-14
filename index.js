@@ -14,6 +14,7 @@ import {
 } from './fortune_tellings/morpheus_says/morpheusSays.js'
 import { getTimeFortune } from './fortune_tellings/time_reading/timeReading.js'
 import { getCompassFateVideo } from './fortune_tellings/compass_of_fate/compassOfFate.js'
+import { getRandomCosmicFortune } from './fortune_tellings/voice_of_universe/voiceOfOniverse.js'
 
 const bot = new Telegraf(process.env.BOT_API_KEY)
 const CACHE_TTL = 60 * 60 * 1000
@@ -76,7 +77,7 @@ bot.start(async (ctx) => {
       chatId,
       language: language_code || null,
     })
-
+    //
     await User.update(userId, {
       firstName: first_name,
       userName: username || null,
@@ -471,6 +472,48 @@ bot.action('start_compass_fate', async (ctx) => {
     console.error('Ошибка в Компас судьбы (видео):', error)
     await ctx.reply(
       '⚠️ Видео не удалось отправить. Проверьте наличие файлов.',
+      mainMenu
+    )
+  }
+})
+
+bot.action('start_voice_of_universe', async (ctx) => {
+  Activity.logButtonAction(
+    ctx.from.id,
+    'fortune_action',
+    '🪐 Голос Вселенной (запуск)',
+    ctx.state.referrerId
+  )
+
+  try {
+    await ctx.deleteMessage()
+
+    const { path, message } = getRandomCosmicFortune()
+    const shareText = `🪐 Я услышал(а) голос Вселенной в боте "Морфей"!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_voice_ref_${ctx.from.id}`
+
+    await ctx.replyWithVideo(
+      { source: path },
+      {
+        caption: `🦋🌀 ${message}`,
+        reply_markup: {
+          inline_keyboard: [
+            [
+              Markup.button.url(
+                '🪐 Поделиться голосом Вселенной',
+                `https://t.me/share/url?url=${encodeURIComponent(
+                  `🪐 Голос Вселенной`
+                )}&text=${encodeURIComponent(shareText)}`
+              ),
+            ],
+            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+          ],
+        },
+      }
+    )
+  } catch (error) {
+    console.error('Ошибка при гадании Голос Вселенной:', error)
+    await ctx.reply(
+      '⚠️ Не удалось получить послание. Попробуйте позже.',
       mainMenu
     )
   }
