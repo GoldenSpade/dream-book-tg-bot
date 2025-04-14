@@ -3,7 +3,7 @@ import { setTimeout } from 'timers/promises'
 import os from 'os'
 
 // Конфигурация
-const DB_FILE = 'stress_test.db'
+const DB_FILE = 'testDB_MaxWriteLoad.db'
 const THREADS = os.cpus().length * 10 // Число потоков (например, 40 для 4-ядерного CPU)
 const TOTAL_OPERATIONS = 5000 // Общее количество операций записи
 const WRITE_DELAY_MS = 0 // Искусственная задержка между запросами (0 для максимальной нагрузки)

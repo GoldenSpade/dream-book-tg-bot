@@ -87,7 +87,7 @@ function exportTableToCSV(tableName) {
     )
 
     // Генерируем CSV
-    let csvContent = columns.join(';') + '\n'
+    let csvContent = columns.join('\t\t\t') + '\n'
 
     data.forEach((row) => {
       const rowValues = columns.map((col) => {
@@ -104,7 +104,7 @@ function exportTableToCSV(tableName) {
         }
         return value ?? 'NULL'
       })
-      csvContent += rowValues.join(';') + '\n'
+      csvContent += rowValues.join('\t\t\t') + '\n'
     })
 
     // Сохраняем файл

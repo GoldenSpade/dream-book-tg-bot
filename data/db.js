@@ -58,13 +58,23 @@ db.prepare(
 `
 ).run()
 
-// Добавить в db.js после создания таблиц
+// Индексы для таблицы Users
+db.prepare('CREATE INDEX IF NOT EXISTS idx_users_userId ON Users(userId)').run()
+db.prepare(
+  'CREATE INDEX IF NOT EXISTS idx_users_lastActivity ON Users(lastActivity)'
+).run()
+db.prepare(
+  'CREATE INDEX IF NOT EXISTS idx_users_userName ON Users(userName)'
+).run()
+db.prepare('CREATE INDEX IF NOT EXISTS idx_users_chatId ON Users(chatId)').run()
+// Индексы для таблицы SearchQueries
 db.prepare(
   'CREATE INDEX IF NOT EXISTS idx_search_queries_user ON SearchQueries(userId)'
 ).run()
 db.prepare(
   'CREATE INDEX IF NOT EXISTS idx_search_queries_query ON SearchQueries(query)'
 ).run()
+// Индексы для таблицы ButtonActions
 db.prepare(
   'CREATE INDEX IF NOT EXISTS idx_button_actions_user ON ButtonActions(userId)'
 ).run()
@@ -120,7 +130,7 @@ const User = {
     const fields = Object.keys(data)
     if (fields.length === 0) return
 
-    const setClause = fields.map((field) => `${field} = ?`).join(', ')
+    const setClause = fields.map((field) => `"${field}" = ?`).join(', ')
     const values = fields.map((field) => data[field])
     values.push(userId)
 

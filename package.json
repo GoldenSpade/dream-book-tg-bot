@@ -9,7 +9,12 @@
     "merge": "node ./admin/mergeFiles.js",
     "export": "node ./admin/DB_Scripts/exportDB.js",
     "cleanup": "node ./admin/DB_Scripts/cleanupDB.js",
-    "getPS": "node ./admin/getProjectStructure.js"
+    "testDB_MaxWrite": "node ./admin/DB_Scripts/testDB_MaxWriteLoad.js",
+    "testDB_ParallelReads": "node ./admin/DB_Scripts/testDB_ParallelReads.js",
+    "VACUUM": "$ node ./admin/DB_Scripts/optimizeDB.js",
+    "getPS": "node ./admin/getProjectStructure.js",
+    "updateUser": "node ./admin/users/updateUserField.js",
+    "addUser": "node ./admin/users/addUser.js"
   },
   "keywords": [
     "dream",

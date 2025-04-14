@@ -2,7 +2,7 @@ import Database from 'better-sqlite3'
 import { setTimeout } from 'timers/promises'
 
 // 1. Инициализация БД
-const db = new Database('test.db')
+const db = new Database('testDB_ParallelReads.db')
 db.pragma('journal_mode = WAL')
 db.pragma('synchronous = NORMAL')
 
