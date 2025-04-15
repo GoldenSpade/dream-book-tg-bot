@@ -688,7 +688,7 @@ bot.action('start_voice_of_universe', async (ctx) => {
   try {
     await ctx.deleteMessage()
     const { path, message, name } = getRandomCosmicFortune()
-    const interpretationText = `Вселенная шлёт знак "${name}":\n\n✨${message}`
+    const interpretationText = `Вселенная дала знак "${name}":\n\n✨${message}`
     const shareText = `🪐 Я услышал(а) голос Вселенной в боте "Морфей"!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_voice_ref_${ctx.from.id}`
 
     await ctx.replyWithVideo(

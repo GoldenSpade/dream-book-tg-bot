@@ -53,7 +53,7 @@ export const commandHandlers = {
         `• Букву \"ё\" заменяйте на \"е\"\n\n` +
         `👨🏻‍💻 Связь, предложения и поддержка: <b>MorfejBot@proton.me</b>`,
       Markup.inlineKeyboard([
-        [Markup.button.callback('⏪ В меню сонника', 'back_to_dreams')],
+        [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
       ])
     )
   },
