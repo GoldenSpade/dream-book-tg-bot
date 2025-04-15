@@ -27,5 +27,6 @@ export function getRandomCosmicFortune() {
     path: videoPath,
     message: randomMeaning,
     videoName: videoFileName,
+    name: randomIcon.name,
   }
 }

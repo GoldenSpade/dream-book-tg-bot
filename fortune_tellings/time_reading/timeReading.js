@@ -75,7 +75,7 @@ function getTimeFortune() {
 
   parts.push(meanings[value] || '🌀 Неизвестная энергия времени.')
 
-  return `🕒 Текущее время: ${timeString}\n` + parts.join('\n')
+  return `🕒 Текущее время: ${timeString}\n\n` + parts.join('\n')
 }
 
 export { getTimeFortune }

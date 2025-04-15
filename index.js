@@ -3,7 +3,13 @@ import 'dotenv/config'
 import { User, Activity, initDB } from './data/db.js'
 import { dataDreams } from './data/dataDreams.js'
 import { commandHandlers } from './handlers/commandHandlers.js'
-import { mainMenu } from './helpers/keyboards.js'
+import {
+  mainMenu,
+  dreamBookMenu,
+  fortuneMenu,
+  backKeyboard,
+} from './helpers/keyboards.js'
+
 import { dateFromTimeStamp } from './helpers/dateFromTimeStamp.js'
 import { searchItems } from './helpers/searchItems.js'
 import { splitText } from './helpers/splitText.js'
@@ -133,10 +139,6 @@ bot.start(async (ctx) => {
   }
 })
 
-Object.entries(commandHandlers).forEach(([command, handler]) => {
-  bot.hears(command, handler)
-})
-
 // Регистрируем все исходящие сообщения бота
 bot.use(async (ctx, next) => {
   await next()
@@ -149,6 +151,11 @@ bot.use(async (ctx, next) => {
 })
 
 // --- Поиск по тексту ---
+bot.action('trigger_search_prompt', async (ctx) => {
+  ctx.session.awaitingSearch = true
+  await commandHandlers.search_prompt(ctx)
+})
+
 bot.on('text', async (ctx) => {
   const { text: target, from, message_id } = ctx.message
 
@@ -211,6 +218,71 @@ bot.on('text', async (ctx) => {
 })
 
 // --- Обработка выбора сна ---
+// bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
+//   const [_, messageId, index] = ctx.match
+//   const cached = searchResults.get(Number(messageId))
+
+//   if (!cached || Date.now() - cached.timestamp > CACHE_TTL) {
+//     await ctx.answerCbQuery('❌ Результаты устарели. Повторите поиск.')
+//     return
+//   }
+
+//   const dream = cached.dreams[Number(index)]
+//   if (!dream) return
+
+//   const interpretationText = `${dream.description}` // Убрали дублирование названия
+//   const parts = splitText(interpretationText, 4096)
+
+//   // Отправляем все части текста
+//   for (const part of parts) {
+//     const sentMessage = await ctx.reply(part)
+//     if (!sentMessages.has(ctx.chat.id)) {
+//       sentMessages.set(ctx.chat.id, [])
+//     }
+//     sentMessages.get(ctx.chat.id).push(sentMessage.message_id)
+//   }
+
+//   // Формируем текст для шаринга (без дублирования в начале)
+//   const shareText = `${dream.description.substring(
+//     0,
+//     100
+//   )}...\n\n✨ Больше толкований в Телеграм боте Морфей: https://t.me/MorfejBot?start=utm_dream_ref_${
+//     ctx.from.id
+//   }`
+
+//   // Добавляем кнопку "Поделиться"
+//   const shareMessage = await ctx.reply(
+//     `🔗 Поделитесь толкованием сна "${dream.word}":`,
+//     Markup.inlineKeyboard([
+//       [
+//         Markup.button.url(
+//           '🦉 Поделиться сном с друзьями',
+//           `https://t.me/share/url?url=${encodeURIComponent(
+//             `Толкование сна "${dream.word}"`
+//           )}&text=${encodeURIComponent(shareText)}`
+//         ),
+//       ],
+//       [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+//     ])
+//   )
+
+//   // Добавляем в БД запись (текст кнопки найденного сна)
+//   Activity.logButtonAction(
+//     ctx.from.id,
+//     'share_action',
+//     `😴 Сон: ${dream.word}`,
+//     ctx.state.referrerId
+//   )
+
+//   // Сохраняем ID сообщения с кнопкой поделиться
+//   if (!sentMessages.has(ctx.chat.id)) {
+//     sentMessages.set(ctx.chat.id, [])
+//   }
+//   sentMessages.get(ctx.chat.id).push(shareMessage.message_id)
+
+//   ctx.answerCbQuery()
+// })
+
 bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   const [_, messageId, index] = ctx.match
   const cached = searchResults.get(Number(messageId))
@@ -223,19 +295,10 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   const dream = cached.dreams[Number(index)]
   if (!dream) return
 
-  const interpretationText = `${dream.description}` // Убрали дублирование названия
-  const parts = splitText(interpretationText, 4096)
+  const interpretationText = `${dream.description}` // Трактование сна
+  const parts = splitText(interpretationText, 4096) // Разбиение на части
 
-  // Отправляем все части текста
-  for (const part of parts) {
-    const sentMessage = await ctx.reply(part)
-    if (!sentMessages.has(ctx.chat.id)) {
-      sentMessages.set(ctx.chat.id, [])
-    }
-    sentMessages.get(ctx.chat.id).push(sentMessage.message_id)
-  }
-
-  // Формируем текст для шаринга (без дублирования в начале)
+  // Формируем текст для шаринга (без названия сна и без текста "Толкование сна")
   const shareText = `${dream.description.substring(
     0,
     100
@@ -243,23 +306,53 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
     ctx.from.id
   }`
 
-  // Добавляем кнопку "Поделиться"
-  const shareMessage = await ctx.reply(
-    `🔗 Поделитесь толкованием сна "${dream.word}":`,
-    Markup.inlineKeyboard([
-      [
-        Markup.button.url(
-          '🦉 Поделиться сном с друзьями',
-          `https://t.me/share/url?url=${encodeURIComponent(
-            `Толкование сна "${dream.word}"`
-          )}&text=${encodeURIComponent(shareText)}`
-        ),
-      ],
-      [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-    ])
-  )
+  // Если трактование помещается в одно сообщение
+  if (parts.length === 1) {
+    const sentMessage = await ctx.replyWithHTML(
+      `${interpretationText}`, // Отправляем только трактование без названия сна
+      Markup.inlineKeyboard([
+        [
+          Markup.button.url(
+            '🦉 Поделиться сном с друзьями',
+            `https://t.me/share/url?url=${encodeURIComponent(
+              ''
+            )} &text=${encodeURIComponent(shareText)}`
+          ),
+        ],
+        [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+      ])
+    )
+    // Сохраняем ID отправленного сообщения
+    if (!sentMessages.has(ctx.chat.id)) {
+      sentMessages.set(ctx.chat.id, [])
+    }
+    sentMessages.get(ctx.chat.id).push(sentMessage.message_id)
+  } else {
+    // Если трактование длинное и нужно разделить на части
+    for (const part of parts) {
+      const sentMessage = await ctx.replyWithHTML(
+        `${part}`, // Отправляем трактование без названия сна
+        Markup.inlineKeyboard([
+          [
+            Markup.button.url(
+              '🦉 Поделиться сном с друзьями',
+              `https://t.me/share/url?url=${encodeURIComponent(
+                ''
+              )} &text=${encodeURIComponent(shareText)}`
+            ),
+          ],
+          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+        ])
+      )
+      // Сохраняем ID отправленного сообщения
+      if (!sentMessages.has(ctx.chat.id)) {
+        sentMessages.set(ctx.chat.id, [])
+      }
+      sentMessages.get(ctx.chat.id).push(sentMessage.message_id)
+    }
+  }
 
-  // Добавляем в БД запись (текст кнопки найденного сна)
+  // Добавляем в БД запись о найденном сне
   Activity.logButtonAction(
     ctx.from.id,
     'share_action',
@@ -267,16 +360,11 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
     ctx.state.referrerId
   )
 
-  // Сохраняем ID сообщения с кнопкой поделиться
-  if (!sentMessages.has(ctx.chat.id)) {
-    sentMessages.set(ctx.chat.id, [])
-  }
-  sentMessages.get(ctx.chat.id).push(shareMessage.message_id)
-
   ctx.answerCbQuery()
 })
 
-// --- Возврат в меню ---
+// Переходы между меню
+// --- Возврат в главное меню ---
 bot.action('back_to_menu', async (ctx) => {
   try {
     await ctx.deleteMessage()
@@ -286,6 +374,99 @@ bot.action('back_to_menu', async (ctx) => {
     await ctx.reply('Главное меню:', mainMenu)
   }
 })
+// Возврат в Сонник
+bot.action('back_to_dreams', async (ctx) => {
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.dream_menu(ctx)
+})
+// Возврат в Гадания
+bot.action('back_to_fortune', async (ctx) => {
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.fortune_menu(ctx)
+})
+
+// ⏬ Переходы между разделами
+bot.action('menu_dreambook', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.dream_menu(ctx)
+})
+
+bot.action('menu_fortune', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.fortune_menu(ctx)
+})
+
+bot.action('menu_instruction', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.general_instruction(ctx)
+})
+
+// ⏬ Меню Сонника
+bot.action('dream_search', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.dream_search(ctx)
+})
+
+bot.action('dream_lunar', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.dream_lunar(ctx)
+})
+
+bot.action('dream_calendar', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.dream_calendar(ctx)
+})
+
+bot.action('dream_instruction', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.dream_instruction(ctx)
+})
+
+// ⏬ Меню Гаданий
+bot.action('fortune_yesno', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.fortune_yesno(ctx)
+})
+
+bot.action('fortune_morpheus', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.fortune_morpheus(ctx)
+})
+
+bot.action('fortune_time', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.fortune_time(ctx)
+})
+
+bot.action('fortune_compass', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.fortune_compass(ctx)
+})
+
+bot.action('fortune_voice', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.fortune_voice(ctx)
+})
+
+bot.action('fortune_instruction', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await commandHandlers.fortune_instruction(ctx)
+})
+
+// Конец обработчиков меню
 
 // Обработка начала гадания
 bot.action('start_fortune', async (ctx) => {
@@ -426,8 +607,8 @@ bot.action('start_time_fortune', async (ctx) => {
 
     const shareText = `${result}\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_time_ref_${ctx.from.id}`
 
-    await ctx.replyWithPhoto(
-      { source: './fortune_tellings/time_reading/img/time_result.jpg' }, // добавь подходящее изображение
+    await ctx.replyWithVideo(
+      { source: './fortune_tellings/time_reading/video/time_reading.mp4' }, // добавь подходящее изображение
       {
         caption: result,
         parse_mode: 'Markdown',
@@ -461,8 +642,8 @@ bot.action('start_compass_fate', async (ctx) => {
   )
   try {
     await ctx.deleteMessage()
-    await ctx.reply('🧭 Судьба вращается...')
-    await new Promise((r) => setTimeout(r, 2000))
+    // await ctx.reply('🧭 Судьба вращается...')
+    // await new Promise((r) => setTimeout(r, 2000))
 
     const { path } = getCompassFateVideo()
 
@@ -506,21 +687,21 @@ bot.action('start_voice_of_universe', async (ctx) => {
 
   try {
     await ctx.deleteMessage()
-
-    const { path, message } = getRandomCosmicFortune()
+    const { path, message, name } = getRandomCosmicFortune()
+    const interpretationText = `Вселенная шлёт знак "${name}":\n\n✨${message}`
     const shareText = `🪐 Я услышал(а) голос Вселенной в боте "Морфей"!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_voice_ref_${ctx.from.id}`
 
     await ctx.replyWithVideo(
       { source: path },
       {
-        caption: `🦋🌀 ${message}`,
+        caption: `🦋🌀 ${interpretationText}`,
         reply_markup: {
           inline_keyboard: [
             [
               Markup.button.url(
                 '🪐 Поделиться голосом Вселенной',
                 `https://t.me/share/url?url=${encodeURIComponent(
-                  `🪐 Голос Вселенной`
+                  `💫 Голос Вселенной\n`
                 )}&text=${encodeURIComponent(shareText)}`
               ),
             ],
