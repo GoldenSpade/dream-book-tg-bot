@@ -188,14 +188,19 @@ export const commandHandlers = {
     )
   },
   fortune_morpheus: async (ctx) => {
-    await ctx.replyWithHTML(
-      '💫 <b>Тайные врата Морфея открыты...</b>\n\n' +
-        '🕯️ Сосредоточьтесь на вопросе который вас интересует\n\n' +
-        '🦉 Нажмите на символ ниже для получения послания',
-      Markup.inlineKeyboard([
-        [Markup.button.callback('🔮 Получить послание', 'start_morpheus')],
-        [Markup.button.callback('⏪ В меню гаданий', 'back_to_fortune')],
-      ])
+    await ctx.replyWithPhoto(
+      { source: './fortune_tellings/morpheus_says/img/morpheus_cover.jpg' },
+      {
+        caption:
+          '💫 Тайные врата Морфея открыты...\n\n🕯️ Сосредоточьтесь на вопросе который вас интересует\n\n🦉 Нажмите на символ ниже для получения послания.',
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [Markup.button.callback('🔮 Получить послание', 'start_morpheus')],
+            [Markup.button.callback('⏪ В меню гаданий', 'back_to_fortune')],
+          ],
+        },
+      }
     )
   },
   fortune_time: async (ctx) => {

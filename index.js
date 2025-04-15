@@ -217,72 +217,6 @@ bot.on('text', async (ctx) => {
   }
 })
 
-// --- Обработка выбора сна ---
-// bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
-//   const [_, messageId, index] = ctx.match
-//   const cached = searchResults.get(Number(messageId))
-
-//   if (!cached || Date.now() - cached.timestamp > CACHE_TTL) {
-//     await ctx.answerCbQuery('❌ Результаты устарели. Повторите поиск.')
-//     return
-//   }
-
-//   const dream = cached.dreams[Number(index)]
-//   if (!dream) return
-
-//   const interpretationText = `${dream.description}` // Убрали дублирование названия
-//   const parts = splitText(interpretationText, 4096)
-
-//   // Отправляем все части текста
-//   for (const part of parts) {
-//     const sentMessage = await ctx.reply(part)
-//     if (!sentMessages.has(ctx.chat.id)) {
-//       sentMessages.set(ctx.chat.id, [])
-//     }
-//     sentMessages.get(ctx.chat.id).push(sentMessage.message_id)
-//   }
-
-//   // Формируем текст для шаринга (без дублирования в начале)
-//   const shareText = `${dream.description.substring(
-//     0,
-//     100
-//   )}...\n\n✨ Больше толкований в Телеграм боте Морфей: https://t.me/MorfejBot?start=utm_dream_ref_${
-//     ctx.from.id
-//   }`
-
-//   // Добавляем кнопку "Поделиться"
-//   const shareMessage = await ctx.reply(
-//     `🔗 Поделитесь толкованием сна "${dream.word}":`,
-//     Markup.inlineKeyboard([
-//       [
-//         Markup.button.url(
-//           '🦉 Поделиться сном с друзьями',
-//           `https://t.me/share/url?url=${encodeURIComponent(
-//             `Толкование сна "${dream.word}"`
-//           )}&text=${encodeURIComponent(shareText)}`
-//         ),
-//       ],
-//       [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-//     ])
-//   )
-
-//   // Добавляем в БД запись (текст кнопки найденного сна)
-//   Activity.logButtonAction(
-//     ctx.from.id,
-//     'share_action',
-//     `😴 Сон: ${dream.word}`,
-//     ctx.state.referrerId
-//   )
-
-//   // Сохраняем ID сообщения с кнопкой поделиться
-//   if (!sentMessages.has(ctx.chat.id)) {
-//     sentMessages.set(ctx.chat.id, [])
-//   }
-//   sentMessages.get(ctx.chat.id).push(shareMessage.message_id)
-
-//   ctx.answerCbQuery()
-// })
-
 bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   const [_, messageId, index] = ctx.match
   const cached = searchResults.get(Number(messageId))
@@ -368,10 +302,10 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
 bot.action('back_to_menu', async (ctx) => {
   try {
     await ctx.deleteMessage()
-    await ctx.reply('Главное меню:', mainMenu)
+    await ctx.replyWithHTML('✨ <b>༺ Главное меню ༺</b> ✨', mainMenu)
   } catch (error) {
     console.error('Ошибка возврата:', error)
-    await ctx.reply('Главное меню:', mainMenu)
+    await ctx.replyWithHTML('✨ <b>༺ Главное меню ༺</b> ✨', mainMenu)
   }
 })
 // Возврат в Сонник
