@@ -1,6 +1,7 @@
 import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
 import { User, Activity, initDB } from './data/db.js'
+import { safeReply } from './handlers/limiter.js'
 import { dataDreams } from './data/dataDreams.js'
 import { commandHandlers } from './handlers/commandHandlers.js'
 import {
@@ -58,7 +59,7 @@ await initDB()
 
 bot.command('time', async (ctx) => {
   const fortune = getTimeFortune()
-  await ctx.reply(fortune)
+  await safeReply(ctx, () => ctx.reply(fortune))
 })
 
 // Start command остается без изменений
@@ -119,23 +120,26 @@ bot.start(async (ctx) => {
     } else {
       console.log(`👋 Возвращение пользователя: ${first_name}, ID: ${userId}`)
     }
-
-    await ctx.replyWithHTML(
-      `🌙 <b>Добро пожаловать в Морфей — бота сновидений и предсказаний!</b>\n\n` +
-        `📖 Здесь вы можете:\n` +
-        `• Найти <b>толкование снов</b> по ключевым словам\n` +
-        `• Узнать <b>лунное</b> и <b>календарное</b> значение сна\n\n` +
-        `🔮 А ещё вас ждут:\n` +
-        `• Гадания <b>Да/Нет</b>, <b>по времени</b>, <b>по компасу</b>\n` +
-        `• <b>Голос Вселенной</b> и <b>мудрость Морфея</b>\n` +
-        `• А также редкие <b>восточные гадания</b> с древними образами и смыслами\n\n` +
-        `📘 В каждом разделе вы найдёте <b>удобную инструкцию</b> — просто нажмите кнопку «Инструкция», чтобы узнать, как всё работает.\n\n` +
-        `✨ Выберите нужный раздел в меню ниже или введите слово из сна, чтобы начать.`,
-      mainMenu
+    await safeReply(ctx, () =>
+      ctx.replyWithHTML(
+        `🌙 <b>Добро пожаловать в Морфей — бота сновидений и предсказаний!</b>\n\n` +
+          `📖 Здесь вы можете:\n` +
+          `• Найти <b>толкование снов</b> по ключевым словам\n` +
+          `• Узнать <b>лунное</b> и <b>календарное</b> значение сна\n\n` +
+          `🔮 А ещё вас ждут:\n` +
+          `• Гадания <b>Да/Нет</b>, <b>по времени</b>, <b>по компасу</b>\n` +
+          `• <b>Голос Вселенной</b> и <b>мудрость Морфея</b>\n` +
+          `• А также редкие <b>восточные гадания</b> с древними образами и смыслами\n\n` +
+          `📘 В каждом разделе вы найдёте <b>удобную инструкцию</b> — просто нажмите кнопку «Инструкция», чтобы узнать, как всё работает.\n\n` +
+          `✨ Выберите нужный раздел в меню ниже или введите слово из сна, чтобы начать.`,
+        mainMenu
+      )
     )
   } catch (err) {
     console.error('Ошибка при обработке /start:', err)
-    await ctx.reply('Произошла ошибка при запуске бота. Попробуйте позже.')
+    await safeReply(ctx, () =>
+      ctx.reply('Произошла ошибка при запуске бота. Попробуйте позже.')
+    )
   }
 })
 
@@ -168,7 +172,9 @@ bot.on('text', async (ctx) => {
   if (typeof commandHandlers[target] === 'function') return
 
   if (target.length < 3) {
-    await ctx.reply('🔍 Слово должно быть длиннее 3 символов.', mainMenu)
+    await safeReply(ctx, () =>
+      ctx.reply('🔍 Слово должно быть длиннее 3 символов.', mainMenu)
+    )
     return
   }
 
@@ -179,9 +185,8 @@ bot.on('text', async (ctx) => {
     Activity.logSearchQuery(ctx.from.id, target)
 
     if (!dreams.length) {
-      await ctx.reply(
-        '😕 Ничего не найдено. Попробуйте другое слово.',
-        mainMenu
+      await safeReply(ctx, () =>
+        ctx.reply('😕 Ничего не найдено. Попробуйте другое слово.', mainMenu)
       )
       return
     }
@@ -196,14 +201,16 @@ bot.on('text', async (ctx) => {
       userId: ctx.from.id,
     })
 
-    const searchResultMessage = await ctx.reply(
-      `🔍 Найдено: ${dreams.length} вариантов`,
-      Markup.inlineKeyboard(
-        [
-          ...buttons,
-          Markup.button.callback('⏪ В главное меню', 'back_to_menu'),
-        ],
-        { columns: 2 }
+    const searchResultMessage = await safeReply(ctx, () =>
+      ctx.reply(
+        `🔍 Найдено: ${dreams.length} вариантов`,
+        Markup.inlineKeyboard(
+          [
+            ...buttons,
+            Markup.button.callback('⏪ В главное меню', 'back_to_menu'),
+          ],
+          { columns: 2 }
+        )
       )
     )
 
@@ -242,30 +249,9 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
 
   // Если трактование помещается в одно сообщение
   if (parts.length === 1) {
-    const sentMessage = await ctx.replyWithHTML(
-      `${interpretationText}`, // Отправляем только трактование без названия сна
-      Markup.inlineKeyboard([
-        [
-          Markup.button.url(
-            '🦉 Поделиться сном с друзьями',
-            `https://t.me/share/url?url=${encodeURIComponent(
-              ''
-            )} &text=${encodeURIComponent(shareText)}`
-          ),
-        ],
-        [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-      ])
-    )
-    // Сохраняем ID отправленного сообщения
-    if (!sentMessages.has(ctx.chat.id)) {
-      sentMessages.set(ctx.chat.id, [])
-    }
-    sentMessages.get(ctx.chat.id).push(sentMessage.message_id)
-  } else {
-    // Если трактование длинное и нужно разделить на части
-    for (const part of parts) {
-      const sentMessage = await ctx.replyWithHTML(
-        `${part}`, // Отправляем трактование без названия сна
+    const sentMessage = await safeReply(ctx, () =>
+      ctx.replyWithHTML(
+        `${interpretationText}`, // Отправляем только трактование без названия сна
         Markup.inlineKeyboard([
           [
             Markup.button.url(
@@ -277,6 +263,31 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
           ],
           [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
         ])
+      )
+    )
+    // Сохраняем ID отправленного сообщения
+    if (!sentMessages.has(ctx.chat.id)) {
+      sentMessages.set(ctx.chat.id, [])
+    }
+    sentMessages.get(ctx.chat.id).push(sentMessage.message_id)
+  } else {
+    // Если трактование длинное и нужно разделить на части
+    for (const part of parts) {
+      const sentMessage = await safeReply(ctx, () =>
+        ctx.replyWithHTML(
+          `${part}`, // Отправляем трактование без названия сна
+          Markup.inlineKeyboard([
+            [
+              Markup.button.url(
+                '🦉 Поделиться сном с друзьями',
+                `https://t.me/share/url?url=${encodeURIComponent(
+                  ''
+                )} &text=${encodeURIComponent(shareText)}`
+              ),
+            ],
+            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+          ])
+        )
       )
       // Сохраняем ID отправленного сообщения
       if (!sentMessages.has(ctx.chat.id)) {
@@ -302,10 +313,14 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
 bot.action('back_to_menu', async (ctx) => {
   try {
     await ctx.deleteMessage()
-    await ctx.replyWithHTML('✨ <b>༺ Главное меню ༺</b> ✨', mainMenu)
+    await safeReply(ctx, () =>
+      ctx.replyWithHTML('✨ <b>༺ Главное меню ༺</b> ✨', mainMenu)
+    )
   } catch (error) {
     console.error('Ошибка возврата:', error)
-    await ctx.replyWithHTML('✨ <b>༺ Главное меню ༺</b> ✨', mainMenu)
+    await safeReply(ctx, () =>
+      ctx.replyWithHTML('✨ <b>༺ Главное меню ༺</b> ✨', mainMenu)
+    )
   }
 })
 // Возврат в Сонник
@@ -419,28 +434,32 @@ bot.action('start_fortune', async (ctx) => {
     const shareText = `🕯️ Я погадал(а) в боте \"Морфей\"!\n\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_yesno_ref_${ctx.from.id}`
 
     // Отправляем результат гадания
-    await ctx.replyWithVideo(
-      { source: gifBuffer },
-      {
-        caption: '🔮 Ваш ответ...',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              Markup.button.url(
-                '✨ Поделиться гаданием Да/Нет',
-                `https://t.me/share/url?url=${encodeURIComponent(
-                  ' '
-                )}&text=${encodeURIComponent(shareText)}`
-              ),
+    await safeReply(ctx, () =>
+      ctx.replyWithVideo(
+        { source: gifBuffer },
+        {
+          caption: '🔮 Ваш ответ... 🎬 Нажмите на видео',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.url(
+                  '✨ Поделиться гаданием Да/Нет',
+                  `https://t.me/share/url?url=${encodeURIComponent(
+                    ' '
+                  )}&text=${encodeURIComponent(shareText)}`
+                ),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
-            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-          ],
-        },
-      }
+          },
+        }
+      )
     )
   } catch (error) {
     console.error('Ошибка при гадании:', error)
-    await ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
+    await safeReply(ctx, () =>
+      ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
+    )
   }
 })
 
@@ -460,27 +479,31 @@ bot.action('start_morpheus', async (ctx) => {
       await getMorpheusImage()
 
     // Отправляем изображение с кнопкой
-    await ctx.replyWithPhoto(
-      { source: imagePath, filename: imageFilename },
-      {
-        caption: '🕯 Морфей приготовил для вас послание...',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              Markup.button.callback(
-                '🎧 Слушать послание',
-                'play_morpheus_audio'
-              ),
+    await safeReply(ctx, () =>
+      ctx.replyWithPhoto(
+        { source: imagePath, filename: imageFilename },
+        {
+          caption: '🕯 Морфей приготовил для вас послание...',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.callback(
+                  '🎧 Слушать послание',
+                  'play_morpheus_audio'
+                ),
+              ],
             ],
-          ],
-        },
-      }
+          },
+        }
+      )
     )
   } catch (error) {
     console.error('Ошибка в Морфей говорит:', error)
-    await ctx.reply(
-      '⚠️ Не удалось загрузить сообщение Морфея. Пожалуйста, попробуйте позже.',
-      mainMenu
+    await safeReply(ctx, () =>
+      ctx.reply(
+        '⚠️ Не удалось загрузить сообщение Морфея. Пожалуйста, попробуйте позже.',
+        mainMenu
+      )
     )
   }
 })
@@ -502,28 +525,32 @@ bot.action('play_morpheus_audio', async (ctx) => {
     const shareText = `🎵 Я услышал(а) голос Морфея в боте \"Морфей\"!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_morpheus_ref_${ctx.from.id}`
 
     // Отправляем аудио
-    await ctx.replyWithAudio(
-      { source: audioPath, filename: audioFilename },
-      {
-        caption: '🕯 Морфей говорит...',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              Markup.button.url(
-                '🎵 Поделиться гаданием Морфей говорит',
-                `https://t.me/share/url?url=${encodeURIComponent(
-                  `▶ Голос Морфея 🔊\n`
-                )}&text=${encodeURIComponent(shareText)}`
-              ),
+    await safeReply(ctx, () =>
+      ctx.replyWithAudio(
+        { source: audioPath, filename: audioFilename },
+        {
+          caption: '🕯 Морфей говорит...',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.url(
+                  '🎵 Поделиться гаданием Морфей говорит',
+                  `https://t.me/share/url?url=${encodeURIComponent(
+                    `▶ Голос Морфея 🔊\n`
+                  )}&text=${encodeURIComponent(shareText)}`
+                ),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
-            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-          ],
-        },
-      }
+          },
+        }
+      )
     )
   } catch (error) {
     console.error('Ошибка при воспроизведении аудио:', error)
-    await ctx.reply('⚠️ Не удалось воспроизвести сообщение Морфея.', mainMenu)
+    await safeReply(ctx, () =>
+      ctx.reply('⚠️ Не удалось воспроизвести сообщение Морфея.', mainMenu)
+    )
   }
 })
 
@@ -541,29 +568,33 @@ bot.action('start_time_fortune', async (ctx) => {
 
     const shareText = `${result}\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_time_ref_${ctx.from.id}`
 
-    await ctx.replyWithVideo(
-      { source: './fortune_tellings/time_reading/video/time_reading.mp4' }, // добавь подходящее изображение
-      {
-        caption: result,
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              Markup.button.url(
-                '⏰ Поделиться гаданием времени',
-                `https://t.me/share/url?url=${encodeURIComponent(
-                  `⚜ Гадание времени ⚜\n`
-                )}&text=${encodeURIComponent(shareText)}`
-              ),
+    await safeReply(ctx, () =>
+      ctx.replyWithVideo(
+        { source: './fortune_tellings/time_reading/video/time_reading.mp4' }, // добавь подходящее изображение
+        {
+          caption: result,
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.url(
+                  '⏰ Поделиться гаданием времени',
+                  `https://t.me/share/url?url=${encodeURIComponent(
+                    `⚜ Гадание времени ⚜\n`
+                  )}&text=${encodeURIComponent(shareText)}`
+                ),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
-            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-          ],
-        },
-      }
+          },
+        }
+      )
     )
   } catch (error) {
     console.error('Ошибка при гадании:', error)
-    await ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
+    await safeReply(ctx, () =>
+      ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
+    )
   }
 })
 // Компас судьбы
@@ -576,37 +607,38 @@ bot.action('start_compass_fate', async (ctx) => {
   )
   try {
     await ctx.deleteMessage()
-    // await ctx.reply('🧭 Судьба вращается...')
-    // await new Promise((r) => setTimeout(r, 2000))
-
     const { path } = getCompassFateVideo()
 
     const shareText = `🧭 Я использовал(а) Компас Судьбы в боте \"Морфей\".\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_compass_ref_${ctx.from.id}`
 
-    await ctx.replyWithVideo(
-      { source: path },
-      {
-        caption: '🕯 Судьба выбрала для тебя направление...',
-        reply_markup: {
-          inline_keyboard: [
-            [
-              Markup.button.url(
-                '🧭 Поделиться Компасом Судьбы',
-                `https://t.me/share/url?url=${encodeURIComponent(
-                  `❇ Компас судьбы ✴\n`
-                )}&text=${encodeURIComponent(shareText)}`
-              ),
+    await safeReply(ctx, () =>
+      ctx.replyWithVideo(
+        { source: path },
+        {
+          caption: '🕯 Судьба выбрала для тебя направление...',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.url(
+                  '🧭 Поделиться Компасом Судьбы',
+                  `https://t.me/share/url?url=${encodeURIComponent(
+                    `❇ Компас судьбы ✴\n`
+                  )}&text=${encodeURIComponent(shareText)}`
+                ),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
-            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-          ],
-        },
-      }
+          },
+        }
+      )
     )
   } catch (error) {
     console.error('Ошибка в Компас судьбы (видео):', error)
-    await ctx.reply(
-      '⚠️ Видео не удалось отправить. Проверьте наличие файлов.',
-      mainMenu
+    await safeReply(ctx, () =>
+      ctx.reply(
+        '⚠️ Видео не удалось отправить. Проверьте наличие файлов.',
+        mainMenu
+      )
     )
   }
 })
@@ -625,30 +657,31 @@ bot.action('start_voice_of_universe', async (ctx) => {
     const interpretationText = `Вселенная дала знак "${name}":\n\n✨${message}`
     const shareText = `🪐 Я услышал(а) голос Вселенной в боте "Морфей"!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_voice_ref_${ctx.from.id}`
 
-    await ctx.replyWithVideo(
-      { source: path },
-      {
-        caption: `🦋🌀 ${interpretationText}`,
-        reply_markup: {
-          inline_keyboard: [
-            [
-              Markup.button.url(
-                '🪐 Поделиться голосом Вселенной',
-                `https://t.me/share/url?url=${encodeURIComponent(
-                  `💫 Голос Вселенной\n`
-                )}&text=${encodeURIComponent(shareText)}`
-              ),
+    await safeReply(ctx, () =>
+      ctx.replyWithVideo(
+        { source: path },
+        {
+          caption: `🦋🌀 ${interpretationText}`,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.url(
+                  '🪐 Поделиться голосом Вселенной',
+                  `https://t.me/share/url?url=${encodeURIComponent(
+                    `💫 Голос Вселенной\n`
+                  )}&text=${encodeURIComponent(shareText)}`
+                ),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
-            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-          ],
-        },
-      }
+          },
+        }
+      )
     )
   } catch (error) {
     console.error('Ошибка при гадании Голос Вселенной:', error)
-    await ctx.reply(
-      '⚠️ Не удалось получить послание. Попробуйте позже.',
-      mainMenu
+    await safeReply(ctx, () =>
+      ctx.reply('⚠️ Не удалось получить послание. Попробуйте позже.', mainMenu)
     )
   }
 })
