@@ -494,6 +494,12 @@ bot.action('start_fortune', async (ctx) => {
   await ctx.answerCbQuery()
   const access = checkAccess(ctx)
   if (!access.granted) {
+    try {
+      await ctx.deleteMessage()
+    } catch (e) {
+      console.warn('❗ Не удалось удалить сообщение с кнопкой "Начать"')
+    }
+
     return safeReply(ctx, () =>
       ctx.replyWithHTML(
         '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
@@ -558,20 +564,45 @@ bot.action('start_fortune', async (ctx) => {
 
 // Гадание Морфеей говорит
 bot.action('start_morpheus', async (ctx) => {
+  await ctx.answerCbQuery()
+
+  const access = await checkAccess(ctx)
+  if (!access.granted) {
+    try {
+      await ctx.deleteMessage()
+    } catch (e) {
+      console.warn('❗ Не удалось удалить сообщение Морфей говорит')
+    }
+
+    return safeReply(ctx, () =>
+      ctx.replyWithHTML(
+        '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
+          'Пополните лимиты или приобретите премиум-доступ.',
+        Markup.inlineKeyboard([
+          [
+            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+            Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
+          ],
+          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+        ])
+      )
+    )
+  }
+
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
     '🎧 Морфей говорит (Запуск)',
     ctx.state.referrerId
   )
+
   try {
     await ctx.deleteMessage()
 
-    // Получаем только изображение (аудио будем получать при нажатии кнопки)
     const { path: imagePath, filename: imageFilename } =
       await getMorpheusImage()
+    const shareText = `🎵 Я услышал(а) голос Морфея в боте «Морфей»!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_morpheus_ref_${ctx.from.id}`
 
-    // Отправляем изображение с кнопкой
     await safeReply(ctx, () =>
       ctx.replyWithPhoto(
         { source: imagePath, filename: imageFilename },
@@ -585,11 +616,25 @@ bot.action('start_morpheus', async (ctx) => {
                   'play_morpheus_audio'
                 ),
               ],
+              [
+                Markup.button.url(
+                  '🎵 Поделиться гаданием Морфей говорит',
+                  `https://t.me/share/url?url=${encodeURIComponent(
+                    '🎧 Морфей говорит\n'
+                  )}&text=${encodeURIComponent(shareText)}`
+                ),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
           },
         }
       )
     )
+
+    // ✅ Уменьшаем лимит после отправки
+    if (!access.premium) {
+      decrementLimit(ctx)
+    }
   } catch (error) {
     console.error('Ошибка в Морфей говорит:', error)
     await safeReply(ctx, () =>
