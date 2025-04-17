@@ -4,13 +4,7 @@ import { User, Activity, initDB } from './data/db.js'
 import { safeReply } from './handlers/limiter.js'
 import { dataDreams } from './data/dataDreams.js'
 import { commandHandlers } from './handlers/commandHandlers.js'
-import {
-  mainMenu,
-  mainMenuWithBack,
-  dreamBookMenu,
-  fortuneMenu,
-  backKeyboard,
-} from './helpers/keyboards.js'
+import { mainMenu, mainMenuWithBack } from './helpers/keyboards.js'
 
 import { dateFromTimeStamp } from './helpers/dateFromTimeStamp.js'
 import { searchItems } from './helpers/searchItems.js'
@@ -111,6 +105,13 @@ bot.start(async (ctx) => {
         'utm_referral_start',
         cleanPayload,
         referrerId
+      )
+    } else {
+      Activity.logButtonAction(
+        ctx.from.id,
+        'command',
+        '/start',
+        ctx.state.referrerId || null
       )
     }
 

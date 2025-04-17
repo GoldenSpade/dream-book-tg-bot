@@ -7,7 +7,10 @@ const mainMenu = Markup.inlineKeyboard([
     Markup.button.callback('📖 Сонник', 'menu_dreambook'),
     Markup.button.callback('🔮 Гадания', 'menu_fortune'),
   ],
-  [Markup.button.callback('📋 Инструкция', 'menu_instruction')],
+  [
+    Markup.button.callback('📋 Инструкция', 'menu_instruction'),
+    Markup.button.callback('👤 Мой аккаунт', 'menu_account'),
+  ],
 ])
 
 // Главное меню + возврат отдельно
