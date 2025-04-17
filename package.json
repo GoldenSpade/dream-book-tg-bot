@@ -15,6 +15,7 @@
     "VACUUM": "node ./admin/DB_Scripts/optimizeDB.js",
     "getPS": "node ./admin/getProjectStructure.js",
     "updateUser": "node ./admin/DB_Scripts/updateUserField.js",
+    "updateLimits": "node ./admin/DB_scripts/updatePremiumLimit.js",
     "addUser": "node ./admin/DB_Scripts/addUser.js",
     "deleteUser": "node ./admin/DB_Scripts/deleteUserById.js"
   },

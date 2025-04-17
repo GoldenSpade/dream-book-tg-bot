@@ -1,4 +1,3 @@
-// updateUserData.js
 import readline from 'readline'
 import { db } from '../../data/db.js'
 
