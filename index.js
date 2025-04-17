@@ -1,6 +1,7 @@
 import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
 import { User, Activity, initDB, db } from './data/db.js'
+import { checkAccess, decrementLimit } from './payment/accessControl.js'
 import { safeReply } from './handlers/limiter.js'
 import { dataDreams } from './data/dataDreams.js'
 import { commandHandlers } from './handlers/commandHandlers.js'
@@ -486,26 +487,41 @@ bot.action('fortune_instruction', async (ctx) => {
   await ctx.deleteMessage().catch(() => {})
   await commandHandlers.fortune_instruction(ctx)
 })
-
 // Конец обработчиков меню
 
-// Обработка начала гадания
+// Обработка начала гадания Да/Нет
 bot.action('start_fortune', async (ctx) => {
+  await ctx.answerCbQuery()
+  const access = checkAccess(ctx)
+  if (!access.granted) {
+    return safeReply(ctx, () =>
+      ctx.replyWithHTML(
+        '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
+          'Пополните лимиты или приобретите премиум-доступ.',
+        Markup.inlineKeyboard([
+          [
+            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+            Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
+          ],
+          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+        ])
+      )
+    )
+  }
+
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
     '✨ Гадание Да/Нет (запуск)',
     ctx.state.referrerId
   )
+
   try {
-    // Удаляем предыдущее сообщение с инструкцией
     await ctx.deleteMessage()
 
-    // Получаем случайное гадание
     const gifBuffer = await getRandomFortune()
-    const shareText = `🕯️ Я погадал(а) в боте \"Морфей\"!\n\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_yesno_ref_${ctx.from.id}`
+    const shareText = `🕯️ Я погадал(а) в боте «Морфей»! Попробуй и ты:\nhttps://t.me/MorfejBot?start=utm_yesno_ref_${ctx.from.id}`
 
-    // Отправляем результат гадания
     await safeReply(ctx, () =>
       ctx.replyWithVideo(
         { source: gifBuffer },
@@ -517,7 +533,7 @@ bot.action('start_fortune', async (ctx) => {
                 Markup.button.url(
                   '✨ Поделиться гаданием Да/Нет',
                   `https://t.me/share/url?url=${encodeURIComponent(
-                    ' '
+                    '🔮 Гадание Да/Нет\n'
                   )}&text=${encodeURIComponent(shareText)}`
                 ),
               ],
@@ -527,10 +543,15 @@ bot.action('start_fortune', async (ctx) => {
         }
       )
     )
+
+    // ✅ Уменьшаем лимит только после отправки
+    if (!access.premium) {
+      decrementLimit(ctx)
+    }
   } catch (error) {
     console.error('Ошибка при гадании:', error)
     await safeReply(ctx, () =>
-      ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
+      ctx.reply('⚠️ Что-то пошло не так. Попробуйте позже.', mainMenu)
     )
   }
 })
