@@ -1,6 +1,6 @@
 import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
-import { User, Activity, initDB } from './data/db.js'
+import { User, Activity, initDB, db } from './data/db.js'
 import { safeReply } from './handlers/limiter.js'
 import { dataDreams } from './data/dataDreams.js'
 import { commandHandlers } from './handlers/commandHandlers.js'
@@ -355,6 +355,67 @@ bot.action('menu_instruction', async (ctx) => {
   await ctx.answerCbQuery()
   await ctx.deleteMessage().catch(() => {})
   await commandHandlers.general_instruction(ctx)
+})
+
+//  Обработка кнопки Мой аккаунт
+bot.action('menu_account', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+
+  try {
+    const user = db
+      .prepare('SELECT * FROM Users WHERE userId = ?')
+      .get(ctx.from.id)
+
+    let message = `<b>👤 Ваш аккаунт</b>\n\n`
+
+    // Лимиты
+    if (user.limit && user.limit > 0) {
+      message += `🔢 Доступно гаданий: <b>${user.limit}</b>\n`
+    } else {
+      message += `🔢 Доступно гаданий: <b>0</b>\n`
+    }
+
+    // Премиум
+    if (user.premiumSince) {
+      const now = new Date()
+      const premiumUntil = new Date(user.premiumSince)
+      const diffMs = premiumUntil - now
+
+      if (diffMs > 0) {
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+        const diffHours = Math.floor((diffMs / (1000 * 60 * 60)) % 24)
+        const diffMinutes = Math.floor((diffMs / (1000 * 60)) % 60)
+        const diffSeconds = Math.floor((diffMs / 1000) % 60)
+
+        message += `💎 Премиум действует ещё: <b>${diffDays} дн. ${diffHours} ч. ${diffMinutes} мин. ${diffSeconds} сек.</b>\n`
+      } else {
+        message += `💎 Премиум: <b>истёк</b>\n`
+      }
+    } else {
+      message += `💎 Премиум: <b>отсутствует</b>\n`
+    }
+
+    message += `\n✨ Спасибо, что вы с нами!`
+
+    await safeReply(ctx, () =>
+      ctx.replyWithHTML(
+        message,
+        Markup.inlineKeyboard([
+          [
+            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+            Markup.button.callback('➕ Пополнить лимиты', 'buy_limits'),
+          ],
+          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+        ])
+      )
+    )
+  } catch (error) {
+    console.error('Ошибка в menu_account:', error)
+    await safeReply(ctx, () =>
+      ctx.reply('⚠️ Не удалось получить информацию об аккаунте.')
+    )
+  }
 })
 
 // ⏬ Меню Сонника

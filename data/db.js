@@ -196,4 +196,4 @@ const Activity = {
   },
 }
 
-export { User, Activity, initDB }
+export { User, Activity, initDB, db }
