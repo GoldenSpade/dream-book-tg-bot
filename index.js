@@ -601,8 +601,6 @@ bot.action('start_morpheus', async (ctx) => {
 
     const { path: imagePath, filename: imageFilename } =
       await getMorpheusImage()
-    const shareText = `🎵 Я услышал(а) голос Морфея в боте «Морфей»!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_morpheus_ref_${ctx.from.id}`
-
     await safeReply(ctx, () =>
       ctx.replyWithPhoto(
         { source: imagePath, filename: imageFilename },
@@ -616,25 +614,12 @@ bot.action('start_morpheus', async (ctx) => {
                   'play_morpheus_audio'
                 ),
               ],
-              [
-                Markup.button.url(
-                  '🎵 Поделиться гаданием Морфей говорит',
-                  `https://t.me/share/url?url=${encodeURIComponent(
-                    '🎧 Морфей говорит\n'
-                  )}&text=${encodeURIComponent(shareText)}`
-                ),
-              ],
               [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
           },
         }
       )
     )
-
-    // ✅ Уменьшаем лимит после отправки
-    if (!access.premium) {
-      decrementLimit(ctx)
-    }
   } catch (error) {
     console.error('Ошибка в Морфей говорит:', error)
     await safeReply(ctx, () =>
@@ -684,6 +669,11 @@ bot.action('play_morpheus_audio', async (ctx) => {
         }
       )
     )
+    // ✅ Уменьшаем лимит после отправки
+    const access = await checkAccess(ctx)
+    if (!access.premium) {
+      decrementLimit(ctx)
+    }
   } catch (error) {
     console.error('Ошибка при воспроизведении аудио:', error)
     await safeReply(ctx, () =>
@@ -694,21 +684,48 @@ bot.action('play_morpheus_audio', async (ctx) => {
 
 // Запуск Гадание времени
 bot.action('start_time_fortune', async (ctx) => {
+  await ctx.answerCbQuery()
+
+  const access = await checkAccess(ctx)
+  if (!access.granted) {
+    try {
+      await ctx.deleteMessage()
+    } catch (e) {
+      console.warn('❗ Не удалось удалить сообщение с кнопкой "Начать"')
+    }
+
+    return safeReply(ctx, () =>
+      ctx.replyWithHTML(
+        '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
+          'Пополните лимиты или приобретите премиум-доступ.',
+        Markup.inlineKeyboard([
+          [
+            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+            Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
+          ],
+          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+        ])
+      )
+    )
+  }
+
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
     '⏰ Гадание времени (запуск)',
     ctx.state.referrerId
   )
+
   try {
     await ctx.deleteMessage()
+
     const result = getTimeFortune()
 
     const shareText = `${result}\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_time_ref_${ctx.from.id}`
 
     await safeReply(ctx, () =>
       ctx.replyWithVideo(
-        { source: './fortune_tellings/time_reading/video/time_reading.mp4' }, // добавь подходящее изображение
+        { source: './fortune_tellings/time_reading/video/time_reading.mp4' },
         {
           caption: result,
           parse_mode: 'Markdown',
@@ -718,7 +735,7 @@ bot.action('start_time_fortune', async (ctx) => {
                 Markup.button.url(
                   '⏰ Поделиться гаданием времени',
                   `https://t.me/share/url?url=${encodeURIComponent(
-                    `⚜ Гадание времени ⚜\n`
+                    '⏳ Гадание времени\n'
                   )}&text=${encodeURIComponent(shareText)}`
                 ),
               ],
@@ -728,26 +745,58 @@ bot.action('start_time_fortune', async (ctx) => {
         }
       )
     )
+
+    // ✅ Уменьшаем лимит после успешного ответа
+    if (!access.premium) {
+      decrementLimit(ctx)
+    }
   } catch (error) {
-    console.error('Ошибка при гадании:', error)
+    console.error('Ошибка при гадании времени:', error)
     await safeReply(ctx, () =>
-      ctx.reply('Что-то пошло не так, попробуйте ещё раз позже.', mainMenu)
+      ctx.reply('⚠️ Что-то пошло не так. Попробуйте ещё раз позже.', mainMenu)
     )
   }
 })
+
 // Компас судьбы
 bot.action('start_compass_fate', async (ctx) => {
+  await ctx.answerCbQuery()
+
+  const access = await checkAccess(ctx)
+  if (!access.granted) {
+    try {
+      await ctx.deleteMessage()
+    } catch (e) {
+      console.warn('❗ Не удалось удалить сообщение Компас судьбы')
+    }
+
+    return safeReply(ctx, () =>
+      ctx.replyWithHTML(
+        '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
+          'Пополните лимиты или приобретите премиум-доступ.',
+        Markup.inlineKeyboard([
+          [
+            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+            Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
+          ],
+          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+        ])
+      )
+    )
+  }
+
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
     '🧭 Компас судьбы (запуск)',
     ctx.state.referrerId
   )
+
   try {
     await ctx.deleteMessage()
     const { path } = getCompassFateVideo()
 
-    const shareText = `🧭 Я использовал(а) Компас Судьбы в боте \"Морфей\".\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_compass_ref_${ctx.from.id}`
+    const shareText = `🧭 Я использовал(а) Компас Судьбы в боте «Морфей».\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_compass_ref_${ctx.from.id}`
 
     await safeReply(ctx, () =>
       ctx.replyWithVideo(
@@ -760,7 +809,7 @@ bot.action('start_compass_fate', async (ctx) => {
                 Markup.button.url(
                   '🧭 Поделиться Компасом Судьбы',
                   `https://t.me/share/url?url=${encodeURIComponent(
-                    `❇ Компас судьбы ✴\n`
+                    '🧭 Компас Судьбы\n'
                   )}&text=${encodeURIComponent(shareText)}`
                 ),
               ],
@@ -770,8 +819,13 @@ bot.action('start_compass_fate', async (ctx) => {
         }
       )
     )
+
+    // ✅ Уменьшаем лимит только после отправки
+    if (!access.premium) {
+      decrementLimit(ctx)
+    }
   } catch (error) {
-    console.error('Ошибка в Компас судьбы (видео):', error)
+    console.error('Ошибка в Компас судьбы:', error)
     await safeReply(ctx, () =>
       ctx.reply(
         '⚠️ Видео не удалось отправить. Проверьте наличие файлов.',
@@ -781,7 +835,33 @@ bot.action('start_compass_fate', async (ctx) => {
   }
 })
 
+// Гадание Голос Вселенной
 bot.action('start_voice_of_universe', async (ctx) => {
+  await ctx.answerCbQuery()
+
+  const access = await checkAccess(ctx)
+  if (!access.granted) {
+    try {
+      await ctx.deleteMessage()
+    } catch (e) {
+      console.warn('❗ Не удалось удалить сообщение Голос Вселенной')
+    }
+
+    return safeReply(ctx, () =>
+      ctx.replyWithHTML(
+        '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
+          'Пополните лимиты или приобретите премиум-доступ.',
+        Markup.inlineKeyboard([
+          [
+            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+            Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
+          ],
+          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+        ])
+      )
+    )
+  }
+
   Activity.logButtonAction(
     ctx.from.id,
     'fortune_action',
@@ -791,9 +871,10 @@ bot.action('start_voice_of_universe', async (ctx) => {
 
   try {
     await ctx.deleteMessage()
+
     const { path, message, name } = getRandomCosmicFortune()
     const interpretationText = `Вселенная дала знак "${name}":\n\n✨${message}`
-    const shareText = `🪐 Я услышал(а) голос Вселенной в боте "Морфей"!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_voice_ref_${ctx.from.id}`
+    const shareText = `🪐 Я услышал(а) голос Вселенной в боте «Морфей»!\n✨ Попробуй и ты: https://t.me/MorfejBot?start=utm_voice_ref_${ctx.from.id}`
 
     await safeReply(ctx, () =>
       ctx.replyWithVideo(
@@ -806,7 +887,7 @@ bot.action('start_voice_of_universe', async (ctx) => {
                 Markup.button.url(
                   '🪐 Поделиться голосом Вселенной',
                   `https://t.me/share/url?url=${encodeURIComponent(
-                    `💫 Голос Вселенной\n`
+                    '👽 Голос Вселенной\n'
                   )}&text=${encodeURIComponent(shareText)}`
                 ),
               ],
@@ -816,6 +897,11 @@ bot.action('start_voice_of_universe', async (ctx) => {
         }
       )
     )
+
+    // ✅ Уменьшаем лимит после отправки
+    if (!access.premium) {
+      decrementLimit(ctx)
+    }
   } catch (error) {
     console.error('Ошибка при гадании Голос Вселенной:', error)
     await safeReply(ctx, () =>
