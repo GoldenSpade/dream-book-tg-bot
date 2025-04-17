@@ -10,6 +10,18 @@ const mainMenu = Markup.inlineKeyboard([
   [Markup.button.callback('📋 Инструкция', 'menu_instruction')],
 ])
 
+// Главное меню + возврат отдельно
+const mainMenuWithBack = Markup.inlineKeyboard([
+  [
+    Markup.button.callback('📖 Сонник', 'menu_dreambook'),
+    Markup.button.callback('🔮 Гадания', 'menu_fortune'),
+  ],
+  [
+    Markup.button.callback('📋 Инструкция', 'menu_instruction'),
+    Markup.button.callback('⏪ В главное меню', 'back_to_menu'),
+  ],
+])
+
 // Меню сонника (inline)
 const dreamBookMenu = Markup.inlineKeyboard([
   [Markup.button.callback('🔍 Поиск по слову', 'dream_search')],
@@ -45,4 +57,4 @@ const backKeyboard = Markup.inlineKeyboard([
   [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
 ])
 
-export { mainMenu, dreamBookMenu, fortuneMenu, backKeyboard }
+export { mainMenu, mainMenuWithBack, dreamBookMenu, fortuneMenu, backKeyboard }
