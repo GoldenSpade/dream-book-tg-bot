@@ -23,9 +23,10 @@ CREATE TABLE IF NOT EXISTS Users (
     userName TEXT,
     language TEXT,
     lastActivity TEXT DEFAULT (datetime('now')),
-    isPremium INTEGER DEFAULT 0,
     premiumSince TEXT,
-    "limit" INTEGER DEFAULT 0
+    "limit" INTEGER DEFAULT 0,
+    refCount INTEGER DEFAULT 0,
+    refBonus INTEGER DEFAULT 0
 )
 `
 ).run()
