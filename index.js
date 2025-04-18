@@ -1,7 +1,7 @@
 import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
 import { User, Activity, initDB, db } from './data/db.js'
-import { checkAccess, decrementLimit } from './payment/accessControl.js'
+import { checkAccess, decrementAccess } from './payment/accessControl.js'
 import { safeReply } from './handlers/limiter.js'
 import { dataDreams } from './data/dataDreams.js'
 import { commandHandlers } from './handlers/commandHandlers.js'
@@ -36,8 +36,12 @@ setInterval(() => {
 
 bot.use(async (ctx, next) => {
   if (!ctx.from) return next()
-  const [user] = await User.findOrCreate({ userId: ctx.from.id })
+
+  const user = db
+    .prepare('SELECT * FROM Users WHERE userId = ?')
+    .get(ctx.from.id)
   ctx.state.referrerId = user?.referrerId || null
+
   await next()
 })
 
@@ -83,14 +87,21 @@ bot.start(async (ctx) => {
     }
 
     // 2. Создаём или обновляем пользователя (без записи referrerId в Users)
-    const [user, created] = await User.findOrCreate({
+    // Проверяем вручную, есть ли пользователь в таблице
+    const existing = db
+      .prepare('SELECT * FROM Users WHERE userId = ?')
+      .get(userId)
+    const created = !existing
+
+    // Создаём (если нужно)
+    const [user] = await User.findOrCreate({
       userId,
       firstName: first_name,
       userName: username || null,
       chatId,
       language: language_code || null,
     })
-    //
+
     await User.update(userId, {
       firstName: first_name,
       userName: username || null,
@@ -98,6 +109,38 @@ bot.start(async (ctx) => {
       language: language_code || null,
       lastActivity: new Date().toISOString(),
     })
+
+    // 3.1 Начисляем бонусы за реферала
+    if (created && referrerId) {
+      try {
+        // Увеличиваем счётчики у пригласившего
+        const refUser = db
+          .prepare('SELECT * FROM Users WHERE userId = ?')
+          .get(referrerId)
+
+        if (refUser) {
+          db.prepare(
+            `UPDATE Users 
+         SET refCount = COALESCE(refCount, 0) + 1,
+             refBonus = COALESCE(refBonus, 0) + 2
+         WHERE userId = ?`
+          ).run(referrerId)
+        }
+
+        // Даём бонус новому пользователю
+        db.prepare(
+          `UPDATE Users 
+       SET refBonus = COALESCE(refBonus, 0) + 2 
+       WHERE userId = ?`
+        ).run(userId)
+
+        console.log(
+          `🎁 Начислены бонусы: пригласившему ${referrerId}, новому ${userId}`
+        )
+      } catch (err) {
+        console.error('❌ Ошибка начисления бонусов за реферала:', err)
+      }
+    }
 
     // 3. Записываем в ButtonActions
     if (cleanPayload) {
@@ -377,12 +420,9 @@ bot.action('menu_account', async (ctx) => {
 
     let message = `<b>👤 Ваш аккаунт</b>\n\n`
 
-    // Лимиты
-    if (user.limit && user.limit > 0) {
-      message += `🔢 Доступно гаданий: <b>${user.limit}</b>\n`
-    } else {
-      message += `🔢 Доступно гаданий: <b>0</b>\n`
-    }
+    // Лимиты. Суммарное количество доступных гаданий
+    const totalFortunes = (user.refBonus || 0) + (user.limit || 0)
+    message += `🔢 Доступно гаданий: <b>${totalFortunes}</b>\n`
 
     // Премиум
     if (user.premiumSince) {
@@ -403,6 +443,10 @@ bot.action('menu_account', async (ctx) => {
     } else {
       message += `💎 Премиум: <b>отсутствует</b>\n`
     }
+
+    // Партнёрская программа
+    message += `🤝 Приглашено друзей: <b>${user.refCount || 0}</b>\n`
+    message += `🎁 Бонусов за рефералов: <b>${user.refBonus || 0}</b>\n`
 
     message += `\n✨ Спасибо, что вы с нами!`
 
@@ -552,7 +596,7 @@ bot.action('start_fortune', async (ctx) => {
 
     // ✅ Уменьшаем лимит только после отправки
     if (!access.premium) {
-      decrementLimit(ctx)
+      decrementAccess(ctx)
     }
   } catch (error) {
     console.error('Ошибка при гадании:', error)
@@ -672,7 +716,7 @@ bot.action('play_morpheus_audio', async (ctx) => {
     // ✅ Уменьшаем лимит после отправки
     const access = await checkAccess(ctx)
     if (!access.premium) {
-      decrementLimit(ctx)
+      decrementAccess(ctx)
     }
   } catch (error) {
     console.error('Ошибка при воспроизведении аудио:', error)
@@ -748,7 +792,7 @@ bot.action('start_time_fortune', async (ctx) => {
 
     // ✅ Уменьшаем лимит после успешного ответа
     if (!access.premium) {
-      decrementLimit(ctx)
+      decrementAccess(ctx)
     }
   } catch (error) {
     console.error('Ошибка при гадании времени:', error)
@@ -822,7 +866,7 @@ bot.action('start_compass_fate', async (ctx) => {
 
     // ✅ Уменьшаем лимит только после отправки
     if (!access.premium) {
-      decrementLimit(ctx)
+      decrementAccess(ctx)
     }
   } catch (error) {
     console.error('Ошибка в Компас судьбы:', error)
@@ -900,7 +944,7 @@ bot.action('start_voice_of_universe', async (ctx) => {
 
     // ✅ Уменьшаем лимит после отправки
     if (!access.premium) {
-      decrementLimit(ctx)
+      decrementAccess(ctx)
     }
   } catch (error) {
     console.error('Ошибка при гадании Голос Вселенной:', error)

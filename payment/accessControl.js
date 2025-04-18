@@ -12,7 +12,6 @@ function checkAccess(ctx) {
     .get(ctx.from.id)
 
   const now = new Date()
-
   const premiumUntil = user.premiumSince ? new Date(user.premiumSince) : null
   const isPremium = premiumUntil && premiumUntil > now
 
@@ -20,8 +19,12 @@ function checkAccess(ctx) {
     return { granted: true, premium: true }
   }
 
+  if (user.refBonus > 0) {
+    return { granted: true, premium: false, use: 'refBonus' }
+  }
+
   if (user.limit > 0) {
-    return { granted: true, premium: false }
+    return { granted: true, premium: false, use: 'limit' }
   }
 
   return { granted: false, premium: false }
@@ -31,10 +34,29 @@ function checkAccess(ctx) {
  * Уменьшает лимит пользователя на 1
  * @param {TelegrafContext} ctx
  */
-function decrementLimit(ctx) {
-  db.prepare('UPDATE Users SET "limit" = "limit" - 1 WHERE userId = ?').run(
-    ctx.from.id
-  )
+function decrementAccess(ctx) {
+  const user = db
+    .prepare('SELECT * FROM Users WHERE userId = ?')
+    .get(ctx.from.id)
+
+  const now = new Date()
+  const premiumUntil = user.premiumSince ? new Date(user.premiumSince) : null
+  const isPremium = premiumUntil && premiumUntil > now
+
+  if (isPremium) return // ничего не списываем
+
+  if (user.refBonus > 0) {
+    db.prepare('UPDATE Users SET refBonus = refBonus - 1 WHERE userId = ?').run(
+      ctx.from.id
+    )
+    return
+  }
+
+  if (user.limit > 0) {
+    db.prepare('UPDATE Users SET "limit" = "limit" - 1 WHERE userId = ?').run(
+      ctx.from.id
+    )
+  }
 }
 
-export { checkAccess, decrementLimit }
+export { checkAccess, decrementAccess }
