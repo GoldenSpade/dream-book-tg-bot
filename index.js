@@ -545,16 +545,23 @@ bot.action('start_fortune', async (ctx) => {
     }
 
     return safeReply(ctx, () =>
-      ctx.replyWithHTML(
-        '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
-          'Пополните лимиты или приобретите премиум-доступ.',
-        Markup.inlineKeyboard([
-          [
-            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-            Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
-          ],
-          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-        ])
+      ctx.replyWithPhoto(
+        { source: './fortune_tellings/img/no_access.jpg' },
+        {
+          caption:
+            '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
+            'Пополните лимиты или приобретите премиум-доступ.',
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+                Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+            ],
+          },
+        }
       )
     )
   }
@@ -619,16 +626,23 @@ bot.action('start_morpheus', async (ctx) => {
     }
 
     return safeReply(ctx, () =>
-      ctx.replyWithHTML(
-        '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
-          'Пополните лимиты или приобретите премиум-доступ.',
-        Markup.inlineKeyboard([
-          [
-            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-            Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
-          ],
-          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-        ])
+      ctx.replyWithPhoto(
+        { source: './fortune_tellings/img/no_access.jpg' },
+        {
+          caption:
+            '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
+            'Пополните лимиты или приобретите премиум-доступ.',
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+                Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+            ],
+          },
+        }
       )
     )
   }
@@ -739,16 +753,23 @@ bot.action('start_time_fortune', async (ctx) => {
     }
 
     return safeReply(ctx, () =>
-      ctx.replyWithHTML(
-        '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
-          'Пополните лимиты или приобретите премиум-доступ.',
-        Markup.inlineKeyboard([
-          [
-            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-            Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
-          ],
-          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-        ])
+      ctx.replyWithPhoto(
+        { source: './fortune_tellings/img/no_access.jpg' },
+        {
+          caption:
+            '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
+            'Пополните лимиты или приобретите премиум-доступ.',
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+                Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+            ],
+          },
+        }
       )
     )
   }
@@ -815,16 +836,23 @@ bot.action('start_compass_fate', async (ctx) => {
     }
 
     return safeReply(ctx, () =>
-      ctx.replyWithHTML(
-        '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
-          'Пополните лимиты или приобретите премиум-доступ.',
-        Markup.inlineKeyboard([
-          [
-            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-            Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
-          ],
-          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-        ])
+      ctx.replyWithPhoto(
+        { source: './fortune_tellings/img/no_access.jpg' },
+        {
+          caption:
+            '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
+            'Пополните лимиты или приобретите премиум-доступ.',
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+                Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+            ],
+          },
+        }
       )
     )
   }
@@ -892,16 +920,23 @@ bot.action('start_voice_of_universe', async (ctx) => {
     }
 
     return safeReply(ctx, () =>
-      ctx.replyWithHTML(
-        '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
-          'Пополните лимиты или приобретите премиум-доступ.',
-        Markup.inlineKeyboard([
-          [
-            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-            Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
-          ],
-          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
-        ])
+      ctx.replyWithPhoto(
+        { source: './fortune_tellings/img/no_access.jpg' },
+        {
+          caption:
+            '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
+            'Пополните лимиты или приобретите премиум-доступ.',
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                Markup.button.callback('💳 Купить премиум', 'buy_premium'),
+                Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
+              ],
+              [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+            ],
+          },
+        }
       )
     )
   }
