@@ -1,7 +1,14 @@
 import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
 import { User, Activity, initDB, db } from './data/db.js'
-import { checkAccess, decrementAccess } from './payment/accessControl.js'
+import { checkAccess, decrementAccess } from './payments/accessControl.js'
+import {
+  showPremiumOptions,
+  showLimitOptions,
+  sendStarInvoice,
+  handleSuccessfulPayment,
+} from './payments/starPayments.js'
+
 import { safeReply } from './handlers/limiter.js'
 import { dataDreams } from './data/dataDreams.js'
 import { commandHandlers } from './handlers/commandHandlers.js'
@@ -381,7 +388,7 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   ctx.answerCbQuery()
 })
 
-// Переходы между меню
+// Обработка кнопок меню
 // --- Возврат в главное меню ---
 bot.action('back_to_menu', async (ctx) => {
   try {
@@ -493,6 +500,73 @@ bot.action('menu_account', async (ctx) => {
       ctx.reply('⚠️ Не удалось получить информацию об аккаунте.')
     )
   }
+})
+
+// Обработка кнопок оплаты
+bot.action('buy_premium', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await showPremiumOptions(ctx)
+})
+
+bot.action('buy_limits', async (ctx) => {
+  await ctx.answerCbQuery()
+  await ctx.deleteMessage().catch(() => {})
+  await showLimitOptions(ctx)
+})
+
+// Обработка кнопок конкретных покупок
+// Премиум
+bot.action('buy_premium_1d', async (ctx) => {
+  await ctx.answerCbQuery()
+  await sendStarInvoice(ctx, 'premium_1d')
+})
+
+bot.action('buy_premium_7d', async (ctx) => {
+  await ctx.answerCbQuery()
+  await sendStarInvoice(ctx, 'premium_7d')
+})
+
+bot.action('buy_premium_30d', async (ctx) => {
+  await ctx.answerCbQuery()
+  await sendStarInvoice(ctx, 'premium_30d')
+})
+
+// Лимиты
+bot.action('buy_limits_3', async (ctx) => {
+  await ctx.answerCbQuery()
+  await sendStarInvoice(ctx, 'limits_3')
+})
+
+bot.action('buy_limits_10', async (ctx) => {
+  await ctx.answerCbQuery()
+  await sendStarInvoice(ctx, 'limits_10')
+})
+
+bot.action('buy_limits_30', async (ctx) => {
+  await ctx.answerCbQuery()
+  await sendStarInvoice(ctx, 'limits_30')
+})
+
+// Обработка pre_checkout_query
+bot.on('pre_checkout_query', async (ctx) => {
+  try {
+    await ctx.answerPreCheckoutQuery(true)
+  } catch (err) {
+    console.error('❌ Ошибка подтверждения оплаты:', err)
+  }
+})
+
+//Обработка успешной оплаты
+bot.on('successful_payment', async (ctx) => {
+  await handleSuccessfulPayment(ctx)
+})
+
+// Обработка команды /paysupport
+bot.command('paysupport', async (ctx) => {
+  await ctx.replyWithHTML(
+    '💬 <b>Возврат средств</b>\n\nПлатежи через Telegram Stars считаются добровольной поддержкой.\n\nЕсли вы столкнулись с ошибочной оплатой — напишите на <b>morfejbot@proton.me</b>.'
+  )
 })
 
 // ⏬ Меню Сонника
