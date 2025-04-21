@@ -9,7 +9,9 @@ import {
   handleSuccessfulPayment,
 } from './payments/starPayments.js'
 
-import { safeReply } from './handlers/limiter.js'
+import { scheduleDailyLimitGranting } from './helpers/dailyLimitGrant.js'
+
+import { safeReply, safeSend } from './handlers/limiter.js'
 import { dataDreams } from './data/dataDreams.js'
 import { commandHandlers } from './handlers/commandHandlers.js'
 import { mainMenu, mainMenuWithBack } from './helpers/keyboards.js'
@@ -109,6 +111,38 @@ bot.start(async (ctx) => {
       language: language_code || null,
     })
 
+    // Если пользователь только что создан — даём 2 лимита
+    if (created) {
+      db.prepare(
+        `UPDATE Users SET "limit" = COALESCE("limit", 0) + 2 WHERE userId = ?`
+      ).run(userId)
+
+      try {
+        await safeReply(ctx, () =>
+          ctx.replyWithHTML(
+            '🎁 Вам начислено <b>2 бесплатных лимита</b> для знакомства с ботом!',
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: '✖ Убрать сообщение',
+                      callback_data: 'dismiss_ref_notify',
+                    },
+                  ],
+                ],
+              },
+            }
+          )
+        )
+      } catch (e) {
+        console.warn(
+          '❗ Не удалось отправить сообщение о бонусе новичку:',
+          e.message
+        )
+      }
+    }
+
     await User.update(userId, {
       firstName: first_name,
       userName: username || null,
@@ -146,10 +180,24 @@ bot.start(async (ctx) => {
         )
         // Уведомление пригласившему
         try {
-          await bot.telegram.sendMessage(
-            referrerId,
-            `🎉 По вашей реферальной ссылке присоединился новый пользователь!\n\n🎁 Вам начислено <b>+2 бонуса</b> и <b>+1 приглашённый</b>.`,
-            { parse_mode: 'HTML' }
+          await safeSend(referrerId, () =>
+            bot.telegram.sendMessage(
+              referrerId,
+              `🎉 По вашей реферальной ссылке присоединился новый пользователь!\n\n🎁 Вам начислено <b>+2 бонуса</b>.`,
+              {
+                parse_mode: 'HTML',
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: '✖ Убрать сообщение',
+                        callback_data: 'dismiss_ref_notify',
+                      },
+                    ],
+                  ],
+                },
+              }
+            )
           )
         } catch (e) {
           console.warn(
@@ -160,8 +208,22 @@ bot.start(async (ctx) => {
 
         // Уведомление приглашённому
         try {
-          await ctx.replyWithHTML(
-            `🎁 Вам начислено <b>+2 бонуса</b> за переход по реферальной ссылке!\nСпасибо, что присоединились 🙌`
+          await safeReply(ctx, () =>
+            ctx.replyWithHTML(
+              `🎁 Вам начислено <b>+2 бонуса</b> за переход по реферальной ссылке!\nСпасибо, что присоединились 🙌`,
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [
+                      {
+                        text: '✖ Убрать сообщение',
+                        callback_data: 'dismiss_ref_notify',
+                      },
+                    ],
+                  ],
+                },
+              }
+            )
           )
         } catch (e) {
           console.warn(
@@ -170,7 +232,7 @@ bot.start(async (ctx) => {
           )
         }
       } catch (err) {
-        console.error('❌ Ошибка начисления бонусов за реферала:', err)
+        console.error('Ошибка начисления бонусов за реферала:', err)
       }
     }
 
@@ -218,7 +280,7 @@ bot.start(async (ctx) => {
   } catch (err) {
     console.error('Ошибка при обработке /start:', err)
     await safeReply(ctx, () =>
-      ctx.reply('Произошла ошибка при запуске бота. Попробуйте позже.')
+      ctx.reply('⚠️ Произошла ошибка при запуске бота. Попробуйте позже.')
     )
   }
 })
@@ -309,7 +371,7 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
   const cached = searchResults.get(Number(messageId))
 
   if (!cached || Date.now() - cached.timestamp > CACHE_TTL) {
-    await ctx.answerCbQuery('❌ Результаты устарели. Повторите поиск.')
+    await ctx.answerCbQuery('✖ Результаты устарели. Повторите поиск.')
     return
   }
 
@@ -553,7 +615,7 @@ bot.on('pre_checkout_query', async (ctx) => {
   try {
     await ctx.answerPreCheckoutQuery(true)
   } catch (err) {
-    console.error('❌ Ошибка подтверждения оплаты:', err)
+    console.error('Ошибка подтверждения оплаты:', err)
   }
 })
 
@@ -630,6 +692,16 @@ bot.action('fortune_instruction', async (ctx) => {
   await ctx.deleteMessage().catch(() => {})
   await commandHandlers.fortune_instruction(ctx)
 })
+
+bot.action('dismiss_ref_notify', async (ctx) => {
+  try {
+    await ctx.answerCbQuery()
+    await ctx.deleteMessage()
+  } catch (e) {
+    console.warn('✖ Не удалось удалить сообщение о реферале:', e.message)
+  }
+})
+
 // Конец обработчиков меню
 
 // Обработка начала гадания Да/Нет
@@ -1087,6 +1159,39 @@ bot.action('start_voice_of_universe', async (ctx) => {
     )
   }
 })
+
+// Начисляет 1 лимит пользователям у которых 0 (каждый день в 03:00)
+// Уведомляем пользователей, которым начислен лимит
+function notifyGrantedUsers(users) {
+  for (const user of users) {
+    safeSend(user.chatId, () =>
+      bot.telegram.sendMessage(
+        user.chatId,
+        '🎁 Вам начислен <b>1 бесплатный лимит</b> на сегодня!\n\nМожете запустить любое гадание.',
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '✖ Убрать сообщение',
+                  callback_data: 'dismiss_ref_notify',
+                },
+              ],
+            ],
+          },
+        }
+      )
+    ).catch((e) => {
+      console.warn(
+        `❗ Не удалось отправить сообщение userId=${user.userId}:`,
+        e.message
+      )
+    })
+  }
+}
+
+scheduleDailyLimitGranting(notifyGrantedUsers, 3, 0) // 3 - часы, 0 - минуты
 
 // --- Запуск ---
 bot
