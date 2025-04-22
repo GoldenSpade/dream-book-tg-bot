@@ -19,7 +19,7 @@ function grantDailyLimits() {
     .all()
 
   for (const user of users) {
-    db.prepare(`UPDATE Users SET "limit" = 1 WHERE userId = ?`).run(user.userId)
+    db.prepare(`UPDATE Users SET "limit" = 5 WHERE userId = ?`).run(user.userId)
   }
 
   console.log(`🎁 Начислено 1 лимит ${users.length} пользователям`)

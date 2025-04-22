@@ -2,12 +2,6 @@ import { Telegraf, Markup } from 'telegraf'
 import 'dotenv/config'
 import { User, Activity, initDB, db } from './data/db.js'
 import { checkAccess, decrementAccess } from './payments/accessControl.js'
-import {
-  showPremiumOptions,
-  showLimitOptions,
-  sendStarInvoice,
-  handleSuccessfulPayment,
-} from './payments/starPayments.js'
 
 import { scheduleDailyLimitGranting } from './helpers/dailyLimitGrant.js'
 
@@ -71,7 +65,6 @@ bot.command('time', async (ctx) => {
   await safeReply(ctx, () => ctx.reply(fortune))
 })
 
-// Start command остается без изменений
 bot.start(async (ctx) => {
   try {
     const { id: userId, first_name, username, language_code } = ctx.from
@@ -111,16 +104,17 @@ bot.start(async (ctx) => {
       language: language_code || null,
     })
 
-    // Если пользователь только что создан — даём 2 лимита
+    // Начисление стартовых лимитов
+    // Если пользователь только что создан — даём 5 лимитов
     if (created) {
       db.prepare(
-        `UPDATE Users SET "limit" = COALESCE("limit", 0) + 2 WHERE userId = ?`
+        `UPDATE Users SET "limit" = COALESCE("limit", 0) + 5 WHERE userId = ?`
       ).run(userId)
 
       try {
         await safeReply(ctx, () =>
           ctx.replyWithHTML(
-            '🎁 Вам начислено <b>2 бесплатных лимита</b> для знакомства с ботом!',
+            '🎁 Вам начислено <b>5 ежедневных лимитов</b> для гаданий!',
             {
               reply_markup: {
                 inline_keyboard: [
@@ -530,12 +524,12 @@ bot.action('menu_account', async (ctx) => {
         const diffMinutes = Math.floor((diffMs / (1000 * 60)) % 60)
         const diffSeconds = Math.floor((diffMs / 1000) % 60)
 
-        message += `💎 Премиум действует ещё: <b>${diffDays} дн. ${diffHours} ч. ${diffMinutes} мин. ${diffSeconds} сек.</b>\n`
+        // message += `💎 Премиум действует ещё: <b>${diffDays} дн. ${diffHours} ч. ${diffMinutes} мин. ${diffSeconds} сек.</b>\n`
       } else {
-        message += `💎 Премиум: <b>истёк</b>\n`
+        // message += `💎 Премиум: <b>истёк</b>\n`
       }
     } else {
-      message += `💎 Премиум: <b>отсутствует</b>\n`
+      // message += `💎 Премиум: <b>отсутствует</b>\n`
     }
 
     // Партнёрская программа
@@ -548,10 +542,6 @@ bot.action('menu_account', async (ctx) => {
       ctx.replyWithHTML(
         message,
         Markup.inlineKeyboard([
-          [
-            Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-            Markup.button.callback('➕ Пополнить лимиты', 'buy_limits'),
-          ],
           [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
         ])
       )
@@ -562,73 +552,6 @@ bot.action('menu_account', async (ctx) => {
       ctx.reply('⚠️ Не удалось получить информацию об аккаунте.')
     )
   }
-})
-
-// Обработка кнопок оплаты
-bot.action('buy_premium', async (ctx) => {
-  await ctx.answerCbQuery()
-  await ctx.deleteMessage().catch(() => {})
-  await showPremiumOptions(ctx)
-})
-
-bot.action('buy_limits', async (ctx) => {
-  await ctx.answerCbQuery()
-  await ctx.deleteMessage().catch(() => {})
-  await showLimitOptions(ctx)
-})
-
-// Обработка кнопок конкретных покупок
-// Премиум
-bot.action('buy_premium_1d', async (ctx) => {
-  await ctx.answerCbQuery()
-  await sendStarInvoice(ctx, 'premium_1d')
-})
-
-bot.action('buy_premium_7d', async (ctx) => {
-  await ctx.answerCbQuery()
-  await sendStarInvoice(ctx, 'premium_7d')
-})
-
-bot.action('buy_premium_30d', async (ctx) => {
-  await ctx.answerCbQuery()
-  await sendStarInvoice(ctx, 'premium_30d')
-})
-
-// Лимиты
-bot.action('buy_limits_3', async (ctx) => {
-  await ctx.answerCbQuery()
-  await sendStarInvoice(ctx, 'limits_3')
-})
-
-bot.action('buy_limits_10', async (ctx) => {
-  await ctx.answerCbQuery()
-  await sendStarInvoice(ctx, 'limits_10')
-})
-
-bot.action('buy_limits_30', async (ctx) => {
-  await ctx.answerCbQuery()
-  await sendStarInvoice(ctx, 'limits_30')
-})
-
-// Обработка pre_checkout_query
-bot.on('pre_checkout_query', async (ctx) => {
-  try {
-    await ctx.answerPreCheckoutQuery(true)
-  } catch (err) {
-    console.error('Ошибка подтверждения оплаты:', err)
-  }
-})
-
-//Обработка успешной оплаты
-bot.on('successful_payment', async (ctx) => {
-  await handleSuccessfulPayment(ctx)
-})
-
-// Обработка команды /paysupport
-bot.command('paysupport', async (ctx) => {
-  await ctx.replyWithHTML(
-    '💬 <b>Возврат средств</b>\n\nПлатежи через Telegram Stars считаются добровольной поддержкой.\n\nЕсли вы столкнулись с ошибочной оплатой — напишите на <b>morfejbot@proton.me</b>.'
-  )
 })
 
 // ⏬ Меню Сонника
@@ -701,7 +624,6 @@ bot.action('dismiss_ref_notify', async (ctx) => {
     console.warn('✖ Не удалось удалить сообщение о реферале:', e.message)
   }
 })
-
 // Конец обработчиков меню
 
 // Обработка начала гадания Да/Нет
@@ -721,14 +643,13 @@ bot.action('start_fortune', async (ctx) => {
         {
           caption:
             '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
-            'Пополните лимиты или приобретите премиум-доступ.',
+            '🌙 <b>Лимиты пополняются каждую ночь</b>,\n' +
+            'но <u>только если у вас осталось 0 лимитов и 0 реферальных бонусов</u>.\n\n' +
+            '📉 Если у вас есть хотя бы 1 лимит или бонус —\n' +
+            'зачисление <b>не произойдёт</b> до полного обнуления.',
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [
-                Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-                Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
-              ],
               [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
           },
@@ -802,14 +723,13 @@ bot.action('start_morpheus', async (ctx) => {
         {
           caption:
             '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
-            'Пополните лимиты или приобретите премиум-доступ.',
+            '🌙 <b>Лимиты пополняются каждую ночь</b>,\n' +
+            'но <u>только если у вас осталось 0 лимитов и 0 реферальных бонусов</u>.\n\n' +
+            '📉 Если у вас есть хотя бы 1 лимит или бонус —\n' +
+            'зачисление <b>не произойдёт</b> до полного обнуления.',
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [
-                Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-                Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
-              ],
               [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
           },
@@ -929,14 +849,13 @@ bot.action('start_time_fortune', async (ctx) => {
         {
           caption:
             '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
-            'Пополните лимиты или приобретите премиум-доступ.',
+            '🌙 <b>Лимиты пополняются каждую ночь</b>,\n' +
+            'но <u>только если у вас осталось 0 лимитов и 0 реферальных бонусов</u>.\n\n' +
+            '📉 Если у вас есть хотя бы 1 лимит или бонус —\n' +
+            'зачисление <b>не произойдёт</b> до полного обнуления.',
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [
-                Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-                Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
-              ],
               [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
           },
@@ -1012,14 +931,13 @@ bot.action('start_compass_fate', async (ctx) => {
         {
           caption:
             '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
-            'Пополните лимиты или приобретите премиум-доступ.',
+            '🌙 <b>Лимиты пополняются каждую ночь</b>,\n' +
+            'но <u>только если у вас осталось 0 лимитов и 0 реферальных бонусов</u>.\n\n' +
+            '📉 Если у вас есть хотя бы 1 лимит или бонус —\n' +
+            'зачисление <b>не произойдёт</b> до полного обнуления.',
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [
-                Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-                Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
-              ],
               [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
           },
@@ -1096,14 +1014,13 @@ bot.action('start_voice_of_universe', async (ctx) => {
         {
           caption:
             '🚫 <b>Нет доступа к гаданию.</b>\n\n' +
-            'Пополните лимиты или приобретите премиум-доступ.',
+            '🌙 <b>Лимиты пополняются каждую ночь</b>,\n' +
+            'но <u>только если у вас осталось 0 лимитов и 0 реферальных бонусов</u>.\n\n' +
+            '📉 Если у вас есть хотя бы 1 лимит или бонус —\n' +
+            'зачисление <b>не произойдёт</b> до полного обнуления.',
           parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
-              [
-                Markup.button.callback('💳 Купить премиум', 'buy_premium'),
-                Markup.button.callback('➕ Купить лимиты', 'buy_limits'),
-              ],
               [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
             ],
           },
@@ -1167,7 +1084,7 @@ function notifyGrantedUsers(users) {
     safeSend(user.chatId, () =>
       bot.telegram.sendMessage(
         user.chatId,
-        '🎁 Вам начислен <b>1 бесплатный лимит</b> на сегодня!\n\nМожете запустить любое гадание.',
+        '🎁 Вам начислено <b>5 бесплатных лимитов</b> на сегодня!\n\nМожете запускать любые гадания.',
         {
           parse_mode: 'HTML',
           reply_markup: {
@@ -1191,7 +1108,7 @@ function notifyGrantedUsers(users) {
   }
 }
 
-scheduleDailyLimitGranting(notifyGrantedUsers, 3, 0) // 3 - часы, 0 - минуты
+scheduleDailyLimitGranting(notifyGrantedUsers, 1, 5) // 3 - часы, 0 - минуты
 
 // --- Запуск ---
 bot
