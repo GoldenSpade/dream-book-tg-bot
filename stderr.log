@@ -1,0 +1,551 @@
+Unhandled error while processing {
+  update_id: 372120859,
+  callback_query: {
+    id: '4998298254826251163',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10670,
+      from: [Object],
+      chat: [Object],
+      date: 1745456949,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_account'
+  }
+}
+Ошибка запуска: TelegramError: 400: Bad Request: query is too old and response timeout expired or query ID is invalid
+    at Telegram.callApi (C:\Bot\node_modules\telegraf\lib\core\network\client.js:315:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///C:/Bot/index.js:495:3
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17) {
+  response: {
+    ok: false,
+    error_code: 400,
+    description: 'Bad Request: query is too old and response timeout expired or query ID is invalid'
+  },
+  on: {
+    method: 'answerCallbackQuery',
+    payload: { text: undefined, callback_query_id: '4998298254826251163' }
+  }
+}
+Ошибка возврата: TelegramError: 400: Bad Request: message to delete not found
+    at Telegram.callApi (C:\Bot\node_modules\telegraf\lib\core\network\client.js:315:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///C:/Bot/index.js:452:5
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17) {
+  response: {
+    ok: false,
+    error_code: 400,
+    description: 'Bad Request: message to delete not found'
+  },
+  on: {
+    method: 'deleteMessage',
+    payload: { chat_id: 7606207943, message_id: 10671 }
+  }
+}
+Unhandled error while processing {
+  update_id: 372120862,
+  callback_query: {
+    id: '4998298251842390967',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10671,
+      from: [Object],
+      chat: [Object],
+      date: 1745458096,
+      text: '🔮 Выберите вариант гадания:',
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'fortune_yesno'
+  }
+}
+Ошибка запуска: TelegramError: 400: Bad Request: query is too old and response timeout expired or query ID is invalid
+    at Telegram.callApi (C:\Bot\node_modules\telegraf\lib\core\network\client.js:315:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///C:/Bot/index.js:585:3
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17) {
+  response: {
+    ok: false,
+    error_code: 400,
+    description: 'Bad Request: query is too old and response timeout expired or query ID is invalid'
+  },
+  on: {
+    method: 'answerCallbackQuery',
+    payload: { text: undefined, callback_query_id: '4998298251842390967' }
+  }
+}
+Unhandled error while processing {
+  update_id: 372120865,
+  callback_query: {
+    id: '4998298254805711722',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_fortune'
+  }
+}
+Ошибка запуска: TelegramError: 400: Bad Request: query is too old and response timeout expired or query ID is invalid
+    at Telegram.callApi (C:\Bot\node_modules\telegraf\lib\core\network\client.js:315:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///C:/Bot/index.js:482:3
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17) {
+  response: {
+    ok: false,
+    error_code: 400,
+    description: 'Bad Request: query is too old and response timeout expired or query ID is invalid'
+  },
+  on: {
+    method: 'answerCallbackQuery',
+    payload: { text: undefined, callback_query_id: '4998298254805711722' }
+  }
+}
+Unhandled error while processing {
+  update_id: 372120864,
+  callback_query: {
+    id: '4998298251372454090',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_account'
+  }
+}
+Unhandled error while processing {
+  update_id: 372120866,
+  callback_query: {
+    id: '4998298252085233631',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_account'
+  }
+}
+Ошибка запуска: TelegramError: 400: Bad Request: query is too old and response timeout expired or query ID is invalid
+    at Telegram.callApi (C:\Bot\node_modules\telegraf\lib\core\network\client.js:315:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///C:/Bot/index.js:495:3
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17) {
+  response: {
+    ok: false,
+    error_code: 400,
+    description: 'Bad Request: query is too old and response timeout expired or query ID is invalid'
+  },
+  on: {
+    method: 'answerCallbackQuery',
+    payload: { text: undefined, callback_query_id: '4998298252085233631' }
+  }
+}
+Unhandled error while processing {
+  update_id: 372120871,
+  callback_query: {
+    id: '4998298251944316896',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_dreambook'
+  }
+}
+Ошибка запуска: TelegramError: 400: Bad Request: query is too old and response timeout expired or query ID is invalid
+    at Telegram.callApi (C:\Bot\node_modules\telegraf\lib\core\network\client.js:315:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///C:/Bot/index.js:476:3
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17) {
+  response: {
+    ok: false,
+    error_code: 400,
+    description: 'Bad Request: query is too old and response timeout expired or query ID is invalid'
+  },
+  on: {
+    method: 'answerCallbackQuery',
+    payload: { text: undefined, callback_query_id: '4998298251944316896' }
+  }
+}
+Unhandled error while processing {
+  update_id: 372120870,
+  callback_query: {
+    id: '4998298252813871698',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_fortune'
+  }
+}
+Unhandled error while processing {
+  update_id: 372120872,
+  callback_query: {
+    id: '4998298253867227887',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_account'
+  }
+}
+Unhandled error while processing {
+  update_id: 372120875,
+  callback_query: {
+    id: '4998298254301008218',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_dreambook'
+  }
+}
+Ошибка запуска: TelegramError: 400: Bad Request: query is too old and response timeout expired or query ID is invalid
+    at Telegram.callApi (C:\Bot\node_modules\telegraf\lib\core\network\client.js:315:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///C:/Bot/index.js:476:3
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17) {
+  response: {
+    ok: false,
+    error_code: 400,
+    description: 'Bad Request: query is too old and response timeout expired or query ID is invalid'
+  },
+  on: {
+    method: 'answerCallbackQuery',
+    payload: { text: undefined, callback_query_id: '4998298254301008218' }
+  }
+}
+Unhandled error while processing {
+  update_id: 372120873,
+  callback_query: {
+    id: '4998298254451268314',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_account'
+  }
+}
+Unhandled error while processing {
+  update_id: 372120879,
+  callback_query: {
+    id: '4998298252200174564',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_fortune'
+  }
+}
+Unhandled error while processing {
+  update_id: 372120874,
+  callback_query: {
+    id: '4998298253708168765',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_fortune'
+  }
+}
+Unhandled error while processing {
+  update_id: 372120876,
+  callback_query: {
+    id: '4998298253808875493',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_account'
+  }
+}
+Unhandled error while processing {
+  update_id: 372120878,
+  callback_query: {
+    id: '4998298252835020602',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_dreambook'
+  }
+}
+Unhandled error while processing {
+  update_id: 372120877,
+  callback_query: {
+    id: '4998298252891064079',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_instruction'
+  }
+}
+Unhandled error while processing {
+  update_id: 372120880,
+  callback_query: {
+    id: '4998298251320635768',
+    from: {
+      id: 7606207943,
+      is_bot: false,
+      first_name: 'Vlad',
+      username: 'irobot_01',
+      language_code: 'ru'
+    },
+    message: {
+      message_id: 10673,
+      from: [Object],
+      chat: [Object],
+      date: 1745458157,
+      text: '✨ ༺ Главное меню ༺ ✨',
+      entities: [Array],
+      reply_markup: [Object]
+    },
+    chat_instance: '2067455815337579638',
+    data: 'menu_account'
+  }
+}
+Ошибка запуска: TelegramError: 400: Bad Request: query is too old and response timeout expired or query ID is invalid
+    at Telegram.callApi (C:\Bot\node_modules\telegraf\lib\core\network\client.js:315:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///C:/Bot/index.js:495:3
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17)
+    at async C:\Bot\node_modules\telegraf\lib\composer.js:519:21
+    at async execute (C:\Bot\node_modules\telegraf\lib\composer.js:518:17) {
+  response: {
+    ok: false,
+    error_code: 400,
+    description: 'Bad Request: query is too old and response timeout expired or query ID is invalid'
+  },
+  on: {
+    method: 'answerCallbackQuery',
+    payload: { text: undefined, callback_query_id: '4998298251320635768' }
+  }
+}
