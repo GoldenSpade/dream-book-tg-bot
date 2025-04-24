@@ -36,6 +36,7 @@ const dreamBookMenu = Markup.inlineKeyboard([
     Markup.button.callback('📘 Инструкция по соннику', 'dream_instruction'),
     Markup.button.callback('⏪ В главное меню', 'back_to_menu'),
   ],
+  [Markup.button.callback('✖ Убрать сообщение', 'dismiss_ref_notify')],
 ])
 
 // Меню гаданий (inline)

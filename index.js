@@ -344,7 +344,8 @@ bot.on('text', async (ctx) => {
         Markup.inlineKeyboard(
           [
             ...buttons,
-            Markup.button.callback('⏪ В главное меню', 'back_to_menu'),
+            Markup.button.callback('⏪ В меню сонника', 'back_to_dreams'),
+            Markup.button.callback('✖ Убрать сообщение', 'dismiss_ref_notify'),
           ],
           { columns: 2 }
         )
@@ -398,7 +399,10 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
               )} &text=${encodeURIComponent(shareText)}`
             ),
           ],
-          [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+          [
+            Markup.button.callback('⏪ В меню сонника', 'back_to_dreams'),
+            Markup.button.callback('✖ Убрать сообщение', 'dismiss_ref_notify'),
+          ],
         ])
       )
     )
@@ -422,7 +426,13 @@ bot.action(/^dream_(\d+)_(\d+)$/, async (ctx) => {
                 )} &text=${encodeURIComponent(shareText)}`
               ),
             ],
-            [Markup.button.callback('⏪ В главное меню', 'back_to_menu')],
+            [
+              Markup.button.callback('⏪ В меню сонника', 'back_to_dreams'),
+              Markup.button.callback(
+                '✖ Убрать сообщение',
+                'dismiss_ref_notify'
+              ),
+            ],
           ])
         )
       )

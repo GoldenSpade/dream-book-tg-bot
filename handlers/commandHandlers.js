@@ -9,7 +9,10 @@ import { dreamBookMenu, fortuneMenu } from '../helpers/keyboards.js'
 export const commandHandlers = {
   dream_menu: async (ctx) => {
     await safeReply(ctx, () =>
-      ctx.reply('📖 Введите слово для поиска', dreamBookMenu)
+      ctx.reply(
+        '📖 Введите слово для поиска или используйте меню',
+        dreamBookMenu
+      )
     )
     Activity.logButtonAction(
       ctx.from.id,
@@ -111,7 +114,7 @@ export const commandHandlers = {
           '• Заменяйте "ё" на "е"\n' +
           '• Для возврата нажмите кнопку ниже</i>',
         Markup.inlineKeyboard([
-          [Markup.button.callback('⏪ В меню сонника', 'back_to_dreams')],
+          [Markup.button.callback('✖ Убрать сообщение', 'dismiss_ref_notify')],
         ])
       )
     )
